@@ -1,0 +1,5 @@
+repos:
+  - repo: https://github.com/exelixis-cpe/exelixis-secure-ci-action
+    rev: main
+    hooks:
+      - id: run-wiz-cli-local-scans

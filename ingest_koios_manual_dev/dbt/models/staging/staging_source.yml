@@ -1,0 +1,198 @@
+version: 2
+
+sources:
+  - name: koios_staging
+    description: ctms Postgress staging schema.
+    database: koios
+    schema: koios_staging
+    tables:
+      - name: ctms_stg__enroll_forecast
+        description: enroll forecast informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__account_association
+        description: pra exelixis acoount association informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__address_association
+        description: pra exelixis address association informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__contact_association
+        description: pra exelixis contact association informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__srm_enroll_proj
+        description: pra exelixis srm enrollment project informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__srm_proj_sites
+        description: pra exelixis srm project sites informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_country
+        description: pra exelixis study country informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study
+        description: pra exelixis study informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_metric
+        description: pra exelixis study metric informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_milestone
+        description: pra exelixis study milestone informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_site
+        description: pra exelixis study site informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_site_monitor
+        description: pra exelixis study site monitor informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_subject
+        description: pra exelixis study subject informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_submission
+        description: pra exelixis study submission informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: subject_visit_summary_report_data
+        description: subject visit summary report informaiton of all studies.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__account
+        description: global account information.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__address
+        description: global address information.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__missing_pages
+        description: missing pages information.
+        columns:
+          - name: hash_key
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+          
+      - name: ctms_stg__study_site_phase3
+        description: site information for XL092-304 and XL092-009.
+        columns:
+          - name: study_id_sk
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__site_contact_details_phase3
+        description: site information for XL092-304 and XL092-009.
+        columns:
+          - name: study_id_sk
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique  
+
+                
+      - name: ctms_stg__cohort_summary_mapping
+        description: cohort information for XL092-002 and XB002-101.
+        columns:
+          - name: study_id_sk
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique  
+      

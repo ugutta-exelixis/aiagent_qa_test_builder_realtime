@@ -1,0 +1,404 @@
+# databricks.yml
+# Databricks Asset Bundle — DDDA Clinical Data Platform
+#
+# ONE JOB — study_id is the execution unit
+# ─────────────────────────────────────────
+# Previously: one job per domain (IRT, EDC, CTMS, Planisware).
+# Now: a single job that processes every active study across all domains.
+#
+# HOW IT WORKS
+# ─────────────
+# 1. file_tracking   — no parameters. Queries schema_registry for all ACTIVE
+#                      studies across all domains. Emits active_studies task
+#                      value: [{study_id, domain, lookback_days}, ...]
+#
+# 2. bronze_foreach  — ForEach over active_studies. One bronze_study sub-task
+#                      per study_id runs in parallel (concurrency=8).
+#                      Each sub-task receives {study_id, domain, lookback_days}
+#                      as study_input and discovers its vendors from
+#                      schema_registry at runtime.
+#
+# 3. stale_cleanup → bronze_retention → silver → dq_alert → gold → pipeline_summary
+#                      Run once after all study bronze tasks complete.
+#                      Schema drift is detected inline inside AutoLoaderBronze
+#                      (SchemaDriftDetector) — no separate task needed.
+#                      Each notebook queries schema_registry internally.
+#
+# domain is NEVER passed as an external parameter — always read from registry.
+#
+# TO ADD A NEW STUDY OR DOMAIN
+# ─────────────────────────────
+# INSERT rows into common.schema_registry. Appears in next run automatically.
+# No YAML changes. No code changes. No redeployment needed.
+
+bundle:
+  name: ddda-clinical-platform
+
+sync:
+  # Include notebooks that live outside the dab/ folder so they are deployed
+  # under ${workspace.file_path} for run_as service principal access.
+  paths:
+    - ../databricks_bundle
+
+variables:
+  env:
+    description: "Deployment environment"
+    default: dev
+  cluster_id:
+    description: >
+      ID of an already-provisioned all-purpose cluster.
+      This bundle NEVER creates a new cluster — it always attaches to an
+      existing one. Must be supplied at deploy time via
+      --var cluster_id=<id> (injected from GitHub Actions secrets).
+    # No default: omitting this at deploy time is a hard error (intentional).
+  src_nb_base:
+    description: "Workspace source notebook root path"
+    default: ${workspace.file_path}/databricks_bundle/src
+  foreach_concurrency:
+    description: "Max parallel bronze_study tasks in the ForEach (tune to cluster size). Set to <= number of worker nodes to avoid driver-unreachable errors on small clusters."
+    default: "4"
+  lookback_days:
+    description: "Days of S3 history to scan per run. 1 = daily incremental (default). Set to 7+ for backfill."
+    default: "1"
+  bronze_retention_days:
+    description: "Rolling days of data to keep in Bronze tables. Default 7."
+    default: "7"
+  stale_after_hours:
+    description: "Hours after which an unprocessed RECEIVED file is quarantined. Default 6."
+    default: "6"
+  service_principal_client_id:
+    description: >
+      Application (client) ID of the service principal that owns and runs
+      the Databricks job. Must match the SP authenticated in GitHub Actions
+      (client_id extracted from AWS Secrets Manager during deploy).
+    # No default: must be supplied at deploy time via
+    # --var service_principal_client_id=<app-id>.
+  onboarding_concurrency:
+    description: >
+      Max parallel sub-tasks in onboard_foreach, historic_bronze_foreach, and
+      catalog_sync_foreach. Set to <= number of worker nodes to avoid
+      driver-unreachable errors on shared clusters. Default 2 (matches
+      the 2-node shared cluster). Increase only when migrated to a larger cluster.
+    default: "4"
+  silver_max_workers:
+    description: >
+      Entity-level parallelism within each domain in the Silver pipeline.
+      Overrides domain_registry.max_parallel_ingestion. Set to
+      executor_cores × 0.75 (r5d.xlarge × 2 workers = 8 cores → 6).
+      Raise to 8 for maximum throughput; reduce if driver OOM occurs.
+    default: "6"
+  src_raw_bucket:
+    description: "SRC job default: raw_bucket"
+    default: "exelixis-clearlake-daplex-dev-us-west-2-441447966705-raw"
+  src_stg_bucket:
+    description: "SRC job default: stg_bucket"
+    default: ""
+  src_catalog:
+    description: "SRC job default: catalog"
+    default: "dev-drugdev_da-koios-catalog"
+  src_bronze_schema:
+    description: "SRC job default: bronze_schema"
+    default: "dev_drugdev_bronze"
+  src_silver_schema:
+    description: "SRC job default: silver_schema"
+    default: "dev_drugdev_silver"
+  src_gold_schema:
+    description: "SRC job default: gold_schema"
+    default: "dev_drugdev_gold"
+  src_metadata_catalog:
+    description: "SRC job default: metadata_catalog"
+    default: "dev-drugdev_da-koios-catalog"
+  src_registry_schema:
+    description: "SRC job default: registry_schema"
+    default: "dev_drugdev_common"
+  src_metadata_schema:
+    description: "SRC job default: metadata_schema"
+    default: "dev_drugdev_common"
+  src_environment:
+    description: "SRC job default: environment"
+    default: "dev"
+  src_source_bucket:
+    description: "SRC job default: source_bucket"
+    default: "exelixis-clearlake-daplex-dev-us-west-2-441447966705-raw"
+  src_run_date:
+    description: "SRC job default: run_date"
+    default: ""
+  src_simulation_type:
+    description: "SRC job default: simulation_type"
+    default: ""
+  src_silver_mode:
+    description: "SRC job default: silver_mode"
+    default: "all"
+  src_silver_domain:
+    description: "SRC job default: silver_domain"
+    default: ""
+  src_silver_entity:
+    description: "SRC job default: silver_entity"
+    default: ""
+  src_silver_study_id:
+    description: "SRC job default: silver_study_id"
+    default: ""
+  src_silver_vendor:
+    description: "SRC job default: silver_vendor"
+    default: ""
+  src_silver_entity_workers:
+    description: "SRC job default: silver_entity_workers"
+    default: "0"
+  src_silver_config_path:
+    description: "SRC job default: silver_config_path"
+    default: ""
+  src_gold_mode:
+    description: "SRC job default: gold_mode"
+    default: "all"
+  src_gold_object_name:
+    description: "SRC job default: gold_object_name"
+    default: ""
+  src_gold_max_workers:
+    description: "SRC job default: gold_max_workers"
+    default: "0"
+  src_gold_config_path:
+    description: "SRC job default: gold_config_path"
+    default: ""
+  src_pii_unmask_group:
+    description: "SRC job default: pii_unmask_group"
+    default: "OG_DIP_DBricks_Dev_Drugdev_Da_Koios_Domain_Developers,OG_DIP_DBricks_Dev_Drugdev_Da_Koios_Domain_Admins,sp:dev_drugdev_da-koios_svc_git"
+  src_days:
+    description: "SRC job default: days"
+    default: "1"
+  test_schema:
+    description: >
+      Fully-qualified '<catalog>.<schema>' throwaway target for the test suite.
+      NO DEFAULT — omitting it at deploy time is a hard error (intentional),
+      matching the cluster_id convention above. The suite's conftest refuses
+      any schema that is denylisted (dev_drugdev_silver/_gold/_bronze/_common)
+      or that does not contain 'test', 'ci' or 'sandbox'. Tests never create or
+      drop tables outside this schema.
+  test_results_path:
+    description: "UC volume directory for JUnit XML test reports."
+    default: "dbfs:/FileStore/ddda-test-results"
+
+workspace:
+  root_path: /Workspace/Shared/ddda-clinical-platform/${bundle.target}
+
+resources:
+  jobs:
+
+    ddda_tests:
+      name: "DDDA Real Test Suite [${var.env}]"
+      description: >
+        Runs tests/databricks against real Spark, Delta and Unity Catalog on
+        serverless compute, so it never contends with the pipeline job for the
+        shared cluster. Writes a JUnit XML report for CI retrieval.
+        Writes ONLY to ${var.test_schema}.
+      max_concurrent_runs: 1
+      timeout_seconds: 3600
+      tasks:
+        - task_key: real_spark_tests
+          notebook_task:
+            notebook_path: ${var.src_nb_base}/run_test_suite
+            base_parameters:
+              test_schema: "${var.test_schema}"
+              results_path: "${var.test_results_path}"
+              test_path: "tests/databricks"
+
+    clinical_platform_pipeline_src:
+      name: "DDDA Clinical Platform Pipeline SRC [${var.env}]"
+      description: >
+        Source-notebook variant of the clinical pipeline.
+        Executes Bronze ingestion, Silver transformation, Gold model build,
+        then emits pipeline summary. Uses notebooks from the synced src folder
+        for Bronze/Silver/Gold/Summary.
+      max_concurrent_runs: 1
+      parameters:
+        - name: raw_bucket
+          default: "${var.src_raw_bucket}"
+        - name: stg_bucket
+          default: "${var.src_stg_bucket}"
+        - name: catalog
+          default: "${var.src_catalog}"
+        - name: bronze_schema
+          default: "${var.src_bronze_schema}"
+        - name: silver_schema
+          default: "${var.src_silver_schema}"
+        - name: gold_schema
+          default: "${var.src_gold_schema}"
+        - name: metadata_catalog
+          default: "${var.src_metadata_catalog}"
+        - name: registry_schema
+          default: "${var.src_registry_schema}"
+        - name: metadata_schema
+          default: "${var.src_metadata_schema}"
+        - name: environment
+          default: "${var.src_environment}"
+        - name: source_bucket
+          default: "${var.src_source_bucket}"
+        - name: pii_unmask_group
+          default: "${var.src_pii_unmask_group}"
+        - name: run_date
+          default: "${var.src_run_date}"
+        - name: simulation_type
+          default: "${var.src_simulation_type}"
+        - name: silver_mode
+          default: "${var.src_silver_mode}"
+        - name: silver_domain
+          default: "${var.src_silver_domain}"
+        - name: silver_entity
+          default: "${var.src_silver_entity}"
+        - name: silver_study_id
+          default: "${var.src_silver_study_id}"
+        - name: silver_vendor
+          default: "${var.src_silver_vendor}"
+        - name: silver_entity_workers
+          default: "${var.src_silver_entity_workers}"
+        - name: silver_config_path
+          default: "${var.src_silver_config_path}"
+        - name: gold_mode
+          default: "${var.src_gold_mode}"
+        - name: gold_object_name
+          default: "${var.src_gold_object_name}"
+        - name: gold_max_workers
+          default: "${var.src_gold_max_workers}"
+        - name: gold_config_path
+          default: "${var.src_gold_config_path}"
+        - name: days
+          default: "${var.src_days}"
+      permissions:
+        - level: CAN_VIEW
+          group_name: users
+        - level: CAN_MANAGE_RUN
+          group_name: users
+      run_as:
+        service_principal_name: "${var.service_principal_client_id}"
+      schedule:
+        quartz_cron_expression: "0 30 11 * * ?"
+        timezone_id: Asia/Kolkata
+        pause_status: UNPAUSED
+      tags:
+        managed_by: source_notebooks
+        execution_unit: pipeline
+
+      tasks:
+
+        - task_key: bronze_src
+          description: >
+            Runs workflow Bronze ingestion notebook from synced src.
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${var.src_nb_base}/drugdev_data_extraction_workflow
+            base_parameters:
+              raw_bucket:       "{{job.parameters.raw_bucket}}"
+              stg_bucket:       "{{job.parameters.stg_bucket}}"
+              catalog:          "{{job.parameters.catalog}}"
+              bronze_schema:    "{{job.parameters.bronze_schema}}"
+              silver_schema:    "{{job.parameters.silver_schema}}"
+              gold_schema:      "{{job.parameters.gold_schema}}"
+              metadata_catalog: "{{job.parameters.metadata_catalog}}"
+              registry_schema:  "{{job.parameters.registry_schema}}"
+              metadata_schema:  "{{job.parameters.metadata_schema}}"
+              environment:      "{{job.parameters.environment}}"
+              source_bucket:    "{{job.parameters.source_bucket}}"
+              run_date:         "{{job.parameters.run_date}}"
+              simulation_type:  "{{job.parameters.simulation_type}}"
+          timeout_seconds: 7200
+          max_retries: 0
+
+        - task_key: silver_src
+          description: >
+            Runs workflow Silver pipeline notebook from synced src.
+          depends_on:
+            - task_key: bronze_src
+          run_if: ALL_DONE
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${var.src_nb_base}/drugdev_silver_pipeline_workflow
+            base_parameters:
+              catalog:        "{{job.parameters.catalog}}"
+              bronze_schema:  "{{job.parameters.bronze_schema}}"
+              silver_schema:  "{{job.parameters.silver_schema}}"
+              metadata_catalog: "{{job.parameters.metadata_catalog}}"
+              registry_schema: "{{job.parameters.registry_schema}}"
+              metadata_schema: "{{job.parameters.metadata_schema}}"
+              environment:    "{{job.parameters.environment}}"
+              source_bucket:  "{{job.parameters.source_bucket}}"
+              run_date:       "{{job.parameters.run_date}}"
+              mode:           "{{job.parameters.silver_mode}}"
+              domain:         "{{job.parameters.silver_domain}}"
+              entity:         "{{job.parameters.silver_entity}}"
+              study_id:       "{{job.parameters.silver_study_id}}"
+              vendor:         "{{job.parameters.silver_vendor}}"
+              pii_unmask_group: "{{job.parameters.pii_unmask_group}}"
+              entity_workers: "{{job.parameters.silver_entity_workers}}"
+              config_path:    "{{job.parameters.silver_config_path}}"
+          timeout_seconds: 10800
+          max_retries: 0
+
+        - task_key: gold_src
+          description: >
+            Runs workflow Gold pipeline notebook from synced src.
+          depends_on:
+            - task_key: silver_src
+          run_if: ALL_DONE
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${var.src_nb_base}/drugdev_gold_pipeline_workflow
+            base_parameters:
+              catalog:        "{{job.parameters.catalog}}"
+              silver_schema:  "{{job.parameters.silver_schema}}"
+              gold_schema:    "{{job.parameters.gold_schema}}"
+              metadata_catalog: "{{job.parameters.metadata_catalog}}"
+              registry_schema: "{{job.parameters.registry_schema}}"
+              metadata_schema: "{{job.parameters.metadata_schema}}"
+              environment:    "{{job.parameters.environment}}"
+              source_bucket:  "{{job.parameters.source_bucket}}"
+              run_date:       "{{job.parameters.run_date}}"
+              mode:           "{{job.parameters.gold_mode}}"
+              object_name:    "{{job.parameters.gold_object_name}}"
+              pii_unmask_group: "{{job.parameters.pii_unmask_group}}"
+              max_workers:    "{{job.parameters.gold_max_workers}}"
+              config_path:    "{{job.parameters.gold_config_path}}"
+          timeout_seconds: 10800
+          max_retries: 0
+
+        - task_key: pipeline_summary_src
+          description: >
+            Emits final pipeline summary and alerts for the run.
+          depends_on:
+            - task_key: gold_src
+          run_if: ALL_DONE
+          existing_cluster_id: ${var.cluster_id}
+          notebook_task:
+            notebook_path: ${var.src_nb_base}/drugdev_pipeline_summary_standalone
+            base_parameters:
+              metadata_catalog: "{{job.parameters.metadata_catalog}}"
+              metadata_schema: "{{job.parameters.metadata_schema}}"
+              registry_schema: "{{job.parameters.registry_schema}}"
+              environment: "{{job.parameters.environment}}"
+              catalog: "{{job.parameters.catalog}}"
+              bronze_schema: "{{job.parameters.bronze_schema}}"
+              silver_schema: "{{job.parameters.silver_schema}}"
+              days: "{{job.parameters.days}}"
+          timeout_seconds: 600
+
+targets:
+  dev:
+    # No 'mode: development' — that mode deploys to the SP's personal home
+    # (~/.bundle/...) and prefixes job names with [dev <sp-name>], making
+    # jobs invisible to other workspace users. CI/CD must use a shared path.
+    # /Workspace/Shared/ is writable by all workspace members without admin access.
+    workspace:
+      root_path: /Workspace/Shared/ddda-clinical-platform/${bundle.target}
+    variables:
+      env: dev
+
+  uat:
+    workspace:
+      root_path: /Workspace/Shared/ddda-clinical-platform/${bundle.target}
+    variables:
+      env: uat
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Shared/ddda-clinical-platform/${bundle.target}
+    variables:
+      env: prod

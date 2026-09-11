@@ -1,0 +1,4389 @@
+domain_name: DrugDev
+data_product_name: DrugDev
+owner_team: clinical_data_engineering
+vendor_entities:
+- vendor: 4G
+  entity: cohort_summary_report
+  scd_business_keys:
+  - cohort
+  - cohort_group
+  - study_id
+  canonical_cols:
+  - study_id
+  - cohort_group
+  - cohort
+  - cohort_description
+  - cohort_status
+  - rank
+  - screening_cap
+  - enrollment_cap
+  - total_screened
+  - total_enrolled
+  - dosing_scheme
+  - dose_level
+  - list_of_approved_countries
+  - hash_key
+  column_types:
+    study_id: string
+    cohort_group: string
+    cohort: string
+    cohort_description: string
+    cohort_status: string
+    rank: string
+    screening_cap: string
+    enrollment_cap: string
+    total_screened: string
+    total_enrolled: string
+    dosing_scheme: string
+    dose_level: string
+    list_of_approved_countries: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: "cast(study_id as string) as study_id,\ncase when cohort = 'A11' and cohort_description = 'Cohort\
+    \ A5b: 2.8 mg/kg' then 'A5b'\t\n    else cohort\n    end as cohort,\ntry_cast(screening_cap    as int) as screening_cap,\n\
+    try_cast(total_screened   as int) as total_screened,\ntry_cast(total_enrolled   as int) as total_enrolled,\ncast(dose_level\
+    \ as string) as dose_level,\nmd5(study_id||cohort_group||cohort) as hash_key\n"
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: IRT-4G-CS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: IRT-4G-CS-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: IRT-4G-CS-NNL-002
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: cohort
+      description: cohort must never be null
+    - rule_id: IRT-4G-CS-UNQ-002
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - cohort
+      - cohort_group
+      - study_id
+      description: cohort must be unique per cohort_group and study_id
+    - rule_id: IRT-4G-CS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: cohort_status
+      description: cohort_status must never be null
+    - rule_id: IRT-4G-CS-NNL-004
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: cohort_group
+      description: cohort_group shouldn't be null
+    - rule_id: IRT-4G-CS-XFLD-001
+      check: cross_field
+      severity: HIGH
+      mode: flag
+      field: ''
+      expression: total_enrolled IS NULL OR total_screened IS NULL OR total_enrolled <= total_screened
+      description: total_enrolled cannot exceed total_screened
+- vendor: 4G
+  entity: subject_summary_report
+  scd_business_keys:
+  - subject
+  - study_id
+  canonical_cols:
+  - study_id
+  - studysite
+  - investigator
+  - country
+  - subject
+  - participant_number
+  - cohort_desc
+  - cohort
+  - study_phase
+  - tumor_type
+  - treatment_arm
+  - dose_level_treatment_arm
+  - dose_level_treatment_arm_1
+  - documented_ras_status
+  - liver_metastasis
+  - region
+  - status
+  - last_visit
+  - last_visit_date
+  - next_expected_visit
+  - next_expected_visit_date
+  - hash_key
+  column_types:
+    study_id: string
+    studysite: string
+    investigator: string
+    country: string
+    subject: string
+    participant_number: string
+    cohort_desc: string
+    cohort: string
+    study_phase: string
+    tumor_type: string
+    treatment_arm: string
+    dose_level_treatment_arm: string
+    dose_level_treatment_arm_1: string
+    documented_ras_status: string
+    liver_metastasis: string
+    region: string
+    status: string
+    last_visit: string
+    last_visit_date: date
+    next_expected_visit: string
+    next_expected_visit_date: date
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - subject
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject
+    pii_category: SUBJECT_IDENTIFIER
+    sensitivity: RESTRICTED
+  - column: participant_number
+    pii_category: SUBJECT_IDENTIFIER
+    sensitivity: RESTRICTED
+  transformation_logic: |
+    cast(study_id as string) as study_id,
+    cast(subject as string) as subject,
+    case when country = 'KOREA (THE REPUBLIC OF)' then 'SOUTH KOREA'
+        when country = 'CZECHIA' then 'CZECH REPUBLIC'
+        when country = 'UNITED STATES OF AMERICA' then 'UNITED STATES'
+        else cast(upper(country) as string) end as  country,
+    coalesce(to_date(last_visit_date,              'yyyy-MM-dd'), to_date(initcap(last_visit_date), 'dd-MMM-yyyy')) as last_visit_date,
+    coalesce(to_date(next_expected_visit_date,     'yyyy-MM-dd'), to_date(initcap(next_expected_visit_date), 'dd-MMM-yyyy')) as next_expected_visit_date,
+    right(cast(subject as string), 4) as participant_number,
+    md5(study_id||studysite||investigator||country||subject) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: IRT-4G-SS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: subject
+      description: subject must never be null
+    - rule_id: IRT-4G-SS-UNQ-002
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - subject
+      - study_id
+      description: subject must be unique per study_id
+    - rule_id: IRT-4G-SS-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: IRT-4G-SS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: status
+      description: status must never be null
+    - rule_id: IRT-4G-SS-NNL-004
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: studysite
+      description: studysite must never be null
+    - rule_id: IRT-4G-SS-NEQ-004
+      check: cross_field
+      severity: HIGH
+      mode: quarantine
+      field: studysite
+      expression: studysite IS NULL OR studysite != '9999'
+      description: studysite must not equal '9999'
+    - rule_id: IRT-4G-SS-XFLD-001
+      check: cross_field
+      severity: HIGH
+      mode: flag
+      field: ''
+      expression: last_visit_date IS NULL OR next_expected_visit_date IS NULL OR next_expected_visit_date >= last_visit_date
+      description: next_expected_visit_date must be on or after last_visit_date when both present
+- vendor: 4G
+  entity: subject_visit_summary_report
+  scd_business_keys:
+  - subject
+  - visit_id
+  - visit_description
+  - study_id
+  - drug_unit_id
+  canonical_cols:
+  - study_id
+  - country
+  - studysite
+  - investigator
+  - subject
+  - participant_number
+  - discontinued_rollback_request_approved
+  - screen_failure_rollback_request_approved
+  - visit_id
+  - visit_description
+  - scheduled_date
+  - actual_date
+  - drug_unit_id
+  - hash_key
+  column_types:
+    study_id: string
+    country: string
+    studysite: string
+    investigator: string
+    subject: string
+    participant_number: string
+    discontinued_rollback_request_approved: string
+    screen_failure_rollback_request_approved: string
+    visit_id: string
+    visit_description: string
+    scheduled_date: date
+    actual_date: date
+    drug_unit_id: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - subject
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: actual_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    {
+      "standard": "cast(study_id as string) as study_id,\ncast(subject as string) as subject,\ncase when country = 'KOREA (THE REPUBLIC OF)' then 'SOUTH KOREA' when country = 'CZECHIA' then 'CZECH REPUBLIC' when country = 'UNITED STATES OF AMERICA' then 'UNITED STATES' else cast(upper(country) as string) end as  country,\ncast(case when studysite ='119' then '108' else studysite end as string) as  studysite,\ncast(investigator as string) as  investigator,\ncase when visit_description in ('Enrollment', 'Enrollment V1', 'Expansion Randomization', 'W1D1','Cycle 1 Day 1','Cycle 1 Day 1 (Randomization)') then 'Randomization' when visit_description like '%Cycle%' and visit_description <> 'Cycle 1 Day 1' then 'Drug Request' when visit_description = 'Subject Status Change' then 'Rescreening' else visit_description end as visit_description,\ncoalesce( to_date(scheduled_date, 'yyyy-MM-dd'),  to_date(initcap(scheduled_date), 'dd-MMM-yyyy'),  to_date(initcap(scheduled_date), 'dd MMM yyyy'))as scheduled_date,\ncoalesce(to_date(actual_date, 'yyyy-MM-dd'),  to_date(initcap(actual_date), 'dd-MMM-yyyy'),  to_date(initcap(actual_date), 'dd MMM yyyy')) as actual_date,\nright(cast(subject as string), 4) as participant_number,\nmd5(study_id||country||studysite||subject||visit_description||actual_date) as hash_key\n",
+      "post_processing": "filters:\n  - condition: \"actual_date is not null\"\ndeduplication:\n  keys: [subject, visit_id, visit_description, study_id, drug_unit_id]\n  order_by: \n    - actual_date\n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: IRT-4G-SVS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: IRT-4G-SVS-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: IRT-4G-SVS-NNL-002
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: subject
+      description: subject must never be null
+    - rule_id: IRT-4G-SVS-UNQ-002
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - subject
+      - visit_description
+      - visit_id
+      - study_id
+      - drug_unit_id
+      description: subject must be unique per visit_description, study_id, and drug_unit_id
+    - rule_id: IRT-4G-SVS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: studysite
+      description: studysite must never be null
+    - rule_id: IRT-4G-SVS-NEQ-003
+      check: cross_field
+      severity: HIGH
+      mode: quarantine
+      field: studysite
+      expression: studysite IS NULL OR studysite != '9999'
+      description: studysite must not equal '9999'
+    - rule_id: IRT-4G-SVS-NNL-004
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: visit_description
+      description: visit_description must never be null
+    - rule_id: IRT-4G-SVS-NNL-005
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: actual_date
+      description: actual_date shouldn't be null
+    - rule_id: IRT-4G-SVS-XFLD-001
+      check: cross_field
+      severity: MEDIUM
+      mode: flag
+      field: ''
+      expression: actual_date IS NULL OR scheduled_date IS NULL OR actual_date >= scheduled_date
+      description: actual_date should be on or after scheduled_date when both present
+- vendor: Cenduit
+  entity: subject_summary_report
+  scd_business_keys:
+  - subject
+  - study_id
+  canonical_cols:
+  - study_id
+  - studysite
+  - investigator
+  - country
+  - subject
+  - participant_number
+  - cohort_desc
+  - cohort
+  - study_phase
+  - tumor_type
+  - treatment_arm
+  - dose_level_treatment_arm
+  - dose_level_treatment_arm_1
+  - documented_ras_status
+  - liver_metastasis
+  - region
+  - status
+  - last_visit
+  - last_visit_date
+  - next_expected_visit
+  - next_expected_visit_date
+  - hash_key
+  column_types:
+    study_id: string
+    studysite: string
+    investigator: string
+    country: string
+    subject: string
+    participant_number: string
+    cohort_desc: string
+    cohort: string
+    study_phase: string
+    tumor_type: string
+    treatment_arm: string
+    dose_level_treatment_arm: string
+    dose_level_treatment_arm_1: string
+    documented_ras_status: string
+    liver_metastasis: string
+    region: string
+    status: string
+    last_visit: string
+    last_visit_date: date
+    next_expected_visit: string
+    next_expected_visit_date: date
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - subject
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject_id
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: cohort
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: dose_level
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: enrollment_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: discontinuation_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: discontinuation_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: last_contact_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    cast(study_id as string) as study_id,
+    cast(subject_number as string) as subject,
+    right(cast(subject_number as string), 4) as participant_number,
+    case when country = 'KOREA (THE REPUBLIC OF)' then 'SOUTH KOREA'
+        when country = 'CZECHIA' then 'CZECH REPUBLIC'
+        when country = 'UNITED STATES OF AMERICA' then 'UNITED STATES'
+        else cast(upper(country) as string) end as  country,
+    coalesce(to_date(status_change,              'yyyy-MM-dd'), to_date(initcap(status_change), 'dd-MMM-yyyy')) as last_visit_date,
+    coalesce(to_date(next_expected_visit_date,     'yyyy-MM-dd'), to_date(initcap(next_expected_visit_date), 'dd-MMM-yyyy')) as next_expected_visit_date,
+    md5(study_id||studysite||investigator||country||subject_number) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: IRT-CND-SS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: subject
+      description: subject must never be null
+    - rule_id: IRT-CND-SS-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - subject
+      - study_id
+      description: subject must be unique per study_id
+    - rule_id: IRT-CND-SS-NNL-002
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: IRT-CND-SS-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: IRT-CND-SS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: status
+      description: status must never be null
+    - rule_id: IRT-CND-SS-NNL-004
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: studysite
+      description: studysite must never be null
+- vendor: Cenduit
+  entity: subject_visit_summary_report
+  scd_business_keys:
+  - subject
+  - visit_description
+  - visit_id
+  - study_id
+  - drug_unit_id
+  canonical_cols:
+  - study_id
+  - country
+  - studysite
+  - investigator
+  - subject
+  - participant_number
+  - discontinued_rollback_request_approved
+  - screen_failure_rollback_request_approved
+  - visit_id
+  - visit_description
+  - scheduled_date
+  - actual_date
+  - drug_unit_id
+  - hash_key
+  column_types:
+    study_id: string
+    country: string
+    studysite: string
+    investigator: string
+    subject: string
+    participant_number: string
+    discontinued_rollback_request_approved: string
+    screen_failure_rollback_request_approved: string
+    visit_id: string
+    visit_description: string
+    scheduled_date: date
+    actual_date: date
+    drug_unit_id: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - subject
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject_id
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: dose_level
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    {
+      "standard": "cast(study_id as string) as study_id,\ncase when country = 'KOREA (THE REPUBLIC OF)' then 'SOUTH KOREA' when country = 'CZECHIA' then 'CZECH REPUBLIC' when country = 'UNITED STATES OF AMERICA' then 'UNITED STATES' else cast(upper(country) as string) end as  country,\ncast(investigator_name as string) as investigator,\ncast(subject_number as string) as subject,\nright(cast(subject_number as string), 4) as participant_number,\ncast(visit as string) as visit_id,\ncase when visit = 'Cycle 1 Day 1' then 'Randomization' when visit <> 'Cycle 1 Day 1' and visit like '%Cycle%' then 'Drug Request' when visit = 'Subject Status Change' then 'Rescreening' else visit end as visit_description,\nto_date(coalesce(to_timestamp(expected_visit_date, 'yyyy-MM-dd HH:mm:ss'),to_timestamp(visit_date))) AS scheduled_date,\nto_date(coalesce(to_timestamp(visit_date, 'yyyy-MM-dd HH:mm:ss'),to_timestamp(visit_date))) AS actual_date,\nmd5(study_id||country||site_number||subject_number||''||visit_date) as hash_key",
+      "post_processing": "filters:\n  - condition: \"actual_date is not null\"\ndeduplication:\n  keys: [subject, visit_id, visit_description, study_id, drug_unit_id]\n  order_by: \n    - actual_date\n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: IRT-CND-BSV-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: IRT-CND-SVS-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: IRT-CND-BVS-NNL-002
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: subject
+      description: subject must never be null
+    - rule_id: IRT-CND-BVS-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - subject
+      - visit_description
+      - visit_id
+      - study_id
+      - drug_unit_id
+      description: subject must be unique per visit_description, visit_id, study_id, and drug_unit_id
+    - rule_id: IRT-CND-BVS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: studysite
+      description: studysite must never be null
+    - rule_id: IRT-CND-BVS-NEQ-003
+      check: cross_field
+      severity: HIGH
+      mode: quarantine
+      field: studysite
+      expression: studysite IS NULL OR studysite != '9999'
+      description: studysite must not equal '9999'
+    - rule_id: IRT-CND-BVS-NNL-004
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: visit_description
+      description: visit_description must never be null
+- vendor: IQVIA
+  entity: account
+  scd_business_keys:
+  - account_id
+  canonical_cols:
+  - account_id
+  - name
+  - hash_key
+  column_types:
+    account_id: string
+    name: string
+    hash_key: string
+  zorder_cols:
+  - account_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(account_source_id as String) as account_id,
+    cast(account_name as String) as name,
+    MD5(account_source_id) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-AC-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: account_id
+      description: account_id must never be null
+    - rule_id: CTMS-IQVIA-AC-UNQ-001
+      check: unique
+      severity: HIGH
+      mode: quarantine
+      field: account_id
+      description: account_id must be unique
+    - rule_id: CTMS-IQVIA-AC-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: name
+      description: name must never be null
+- vendor: IQVIA
+  entity: account_association
+  scd_business_keys:
+  - study_id
+  - account_id
+  - associated_record_id
+  canonical_cols:
+  - study_id
+  - account_id
+  - associated_dataset
+  - associated_record_id
+  - address_id
+  - type
+  - active_flag
+  - hash_key
+  column_types:
+    study_id: string
+    account_id: string
+    associated_dataset: string
+    associated_record_id: string
+    address_id: string
+    type: string
+    active_flag: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - account_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(clinical_study_source_id as String) as study_id,
+    cast(account_source_id as String) as account_id,
+    cast(study_site_source_id as String) as associated_record_id,
+    md5(clinical_study_source_id || account_source_id || COALESCE(study_site_source_id,'') || COALESCE(primary_account_flag,'')) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-AA-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-IQVIA-AA-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-IQVIA-AA-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: account_id
+      description: account_id must never be null
+    - rule_id: CTMS-IQVIA-AA-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: associated_record_id
+      description: associated_record_id must never be null
+    - rule_id: CTMS-IQVIA-AA-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - account_id
+      - associated_record_id
+      description: associated_record_id must be unique per study_id and account_id
+- vendor: IQVIA
+  entity: address
+  scd_business_keys:
+  - address_id
+  canonical_cols:
+  - address_id
+  - line1
+  - line2
+  - line3
+  - city
+  - state_province
+  - postal_code
+  - country
+  - hash_key
+  column_types:
+    address_id: string
+    line1: string
+    line2: string
+    line3: string
+    city: string
+    state_province: string
+    postal_code: string
+    country: string
+    hash_key: string
+  zorder_cols:
+  - address_id
+  - country
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(address_source_id as String) as address_id,
+    MD5(address_source_id) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-AD-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: address_id
+      description: address_id must never be null
+    - rule_id: CTMS-IQVIA-AD-UNQ-001
+      check: unique
+      severity: HIGH
+      mode: quarantine
+      field: address_id
+      description: address_id must be unique
+- vendor: IQVIA
+  entity: address_association
+  scd_business_keys:
+  - study_id
+  - address_id
+  - associated_record_id
+  - type
+  canonical_cols:
+  - study_id
+  - address_id
+  - associated_dataset
+  - associated_record_id
+  - type
+  - hash_key
+  column_types:
+    study_id: string
+    address_id: string
+    associated_dataset: string
+    associated_record_id: string
+    type: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - address_id
+  - associated_record_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(clinical_study_source_id as String) as study_id,
+    'STUDY SITE' as associated_dataset,
+    cast(address_source_id as String) as address_id,
+    cast(study_site_source_id as String) as associated_record_id,
+    MD5(clinical_study_source_id || address_source_id || COALESCE(study_site_source_id,'') || COALESCE(type,'')) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-ADA-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-IQVIA-ADA-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-IQVIA-ADA-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: address_id
+      description: address_id must never be null
+    - rule_id: CTMS-IQVIA-ADA-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: associated_record_id
+      description: associated_record_id must never be null
+    - rule_id: CTMS-IQVIA-ADA-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - address_id
+      - associated_record_id
+      - type
+      description: associated_record_id must be unique per study_id, address_id, and type
+- vendor: IQVIA
+  entity: contact
+  scd_business_keys:
+  - contact_id
+  canonical_cols:
+  - contact_id
+  - first_name
+  - last_name
+  - mid_name
+  - title
+  - degree
+  - inv_flag
+  - email
+  - email_2
+  - email_3
+  - phone_number
+  - fax_number
+  - cell_number
+  - home_number
+  - pager_number
+  - pager_pin
+  - alt_phone_number
+  - hash_key
+  column_types:
+    contact_id: string
+    first_name: string
+    last_name: string
+    mid_name: string
+    title: string
+    degree: string
+    inv_flag: string
+    email: string
+    email_2: string
+    email_3: string
+    phone_number: string
+    fax_number: string
+    cell_number: string
+    home_number: string
+    pager_number: string
+    pager_pin: string
+    alt_phone_number: string
+    hash_key: string
+  zorder_cols:
+  - contact_id
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: first_name
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: last_name
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: mid_name
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: email
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: email_2
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: email_3
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: phone_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: cell_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: home_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: alt_phone_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: fax_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: pager_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: pager_pin
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    cast(contact_source_id as String) as contact_id,
+    MD5(contact_source_id) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-CO-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: contact_id
+      description: contact_id must never be null
+- vendor: IQVIA
+  entity: contact_association
+  scd_business_keys:
+  - study_id
+  - contact_id
+  - associated_record_id
+  - account_id
+  - role
+  - start_date
+  - end_date
+  canonical_cols:
+  - study_id
+  - contact_id
+  - associated_dataset
+  - associated_record_id
+  - address_id
+  - account_id
+  - role
+  - start_date
+  - end_date
+  - hash_key
+  column_types:
+    study_id: string
+    contact_id: string
+    associated_dataset: string
+    associated_record_id: string
+    address_id: string
+    account_id: string
+    role: string
+    start_date: date
+    end_date: date
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - contact_id
+  - associated_record_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(clinical_study_source_id as String) as study_id,
+    cast(contact_source_id as String) as contact_id,
+    'STUDY SITE' as  associated_dataset,
+    cast(study_site_source_id as String) as associated_record_id,
+    cast(address_source_id as String) as address_id,
+    cast(job_role as String) as role,
+    case
+      when to_date(trim(site_contact_start_date), 'MM/dd/yyyy') is not null
+        then upper(date_format(to_date(trim(site_contact_start_date), 'MM/dd/yyyy'),'dd-MMM-yyyy'))
+      else NULL
+      end as start_date,
+    case
+      when to_date(trim(site_contact_end_date), 'MM/dd/yyyy') is not null
+        then upper(date_format(to_date(trim(site_contact_end_date), 'MM/dd/yyyy'),'dd-MMM-yyyy'))
+      else NULL
+      end as end_date,
+    MD5(clinical_study_source_id || contact_source_id || COALESCE(study_site_source_id,'') || COALESCE(site_contact_start_date,'') || COALESCE(job_role,'job_role')) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-CA-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-IQVIA-CA-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-IQVIA-CA-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: contact_id
+      description: contact_id must never be null
+    - rule_id: CTMS-IQVIA-CA-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: associated_record_id
+      description: associated_record_id must never be null
+    - rule_id: CTMS-IQVIA-CA-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - contact_id
+      - associated_record_id
+      - account_id
+      - role
+      - start_date
+      - end_date
+      description: associated_record_id must be unique per study_id, contact_id, and role
+- vendor: IQVIA
+  entity: proj_sites
+  scd_business_keys:
+  - study_id
+  - country_name
+  - month_end_date
+  canonical_cols:
+  - study_id
+  - country_name
+  - month_end_date
+  - planned_sites
+  - hash_key
+  column_types:
+    study_id: string
+    country_name: string
+    month_end_date: date
+    planned_sites: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - country_name
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    {
+      "standard": "cast(clinical_study_source_id as string) as study_id,\ncast(study_country_source_id as string) as country_name,\nCOALESCE(TO_DATE(metric_date, 'yyyy-MM-dd'),TO_DATE(UPPER(metric_date), 'dd-MMM-yyyy'),TO_DATE(metric_date, 'MM/dd/yyyy')) as month_end_date,\ncast(metric_value as string) as planned_sites,\ncast(metric_type as string) as metric_type,\ncast(metric_name as string) as metric_name,\nMD5(clinical_study_source_id || coalesce(study_country_source_id,'') || coalesce(metric_date,'') ) as hash_key\n",
+      "post_processing": "filters:\n  - condition: \"country_name is not null\"\nlatest:\n  column: \"month_end_date\"\n  partition_by:\n    - \"study_id\"\n"
+    }
+  cross_entity_sql: "select distinct\n  scm.* EXCEPT (country_name),\n  case when upper(sc.study_region) = 'UNITED STATES\
+    \ OF AMERICA' then 'UNITED STATES'\n    when upper(sc.study_region) = 'KOREA, REPUBLIC OF' then 'SOUTH KOREA'\n    when\
+    \ upper(sc.study_region) = 'TAIWAN, REPUBLIC OF CHINA' then 'TAIWAN' \n    else upper(sc.study_region)\n  end as country_name\n\
+    from {staging_table} scm\nLEFT JOIN {bronze:study_country} sc\n    ON  scm.country_name = sc.study_country_source_id\n\
+    \    AND scm.study_id         = sc._study_id\nwhere scm.metric_type = 'Projected'\nand scm.metric_name = 'Planned Sites\
+    \ Open'\n"
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-PS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-IQVIA-PS-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-IQVIA-PS-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: planned_sites
+      description: planned_sites must never be null
+    - rule_id: CTMS-IQVIA-PS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: country_name
+      description: country_name must never be null
+    - rule_id: CTMS-IQVIA-PS-NNL-004
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: month_end_date
+      description: month_end_date must never be null
+- vendor: IQVIA
+  entity: study
+  scd_business_keys:
+  - study_id
+  canonical_cols:
+  - study_id
+  - study_title
+  - status
+  - therapeutic_area
+  - study_type
+  - unblinded
+  - study_drug
+  - hash_key
+  column_types:
+    study_id: string
+    study_title: string
+    status: string
+    therapeutic_area: string
+    study_type: string
+    unblinded: string
+    study_drug: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(clinical_study_source_id as string) as study_id,
+    cast(protocol_title as string) as study_title,
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-STU-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-IQVIA-STU-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+- vendor: IQVIA
+  entity: study_country
+  scd_business_keys:
+  - study_id
+  - study_country_id
+  canonical_cols:
+  - study_id
+  - study_country_id
+  - country_name
+  - country_status
+  - hash_key
+  column_types:
+    study_id: string
+    study_country_id: string
+    country_name: string
+    country_status: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - study_country_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(clinical_study_source_id as String) as study_id,
+    cast(study_country_source_id as String) as study_country_id,
+    case
+      when UPPER(study_region) = 'KOREA, REPUBLIC OF'        then 'SOUTH KOREA'
+      when UPPER(study_region) = 'UNITED STATES OF AMERICA'  then 'UNITED STATES'
+      when UPPER(study_region) = 'TAIWAN, REPUBLIC OF CHINA' then 'TAIWAN'
+      else UPPER(study_region)
+      end as country_name,
+    cast(study_region_status as String) as country_status,
+    MD5(clinical_study_source_id || study_country_source_id) as hash_key
+  cross_entity_sql: |
+    select /*+ BROADCAST(crm) */ distinct sc.* EXCEPT (country_status, study_country_id),
+      crm.study_country_id,
+      case when  count(case when s.site_status IN ('Enrollment Open', 'Enrollment On-Hold')
+                       OR s.site_status = 'Enrollment Closed' then 1 end) over (PARTITION BY sc.study_country_id) > 0 then 'Active'
+            when count(case when s.site_status = 'Selected' then 1 end) over (PARTITION BY sc.study_country_id) > 0 THEN 'Approved'
+            when count(case when s.site_status = 'Dropped' then 1 end) over (PARTITION BY sc.study_country_id) > 0 THEN 'Terminated'
+            else coalesce(s.site_status, sc.country_status) end as country_status
+    FROM {staging_table} sc
+    LEFT JOIN {bronze:study_site} s
+      ON  sc.study_country_id = s.study_country_source_id
+      AND sc.study_id         = s._study_id
+    LEFT JOIN {common:country_region_mapping} crm
+      ON CASE WHEN UPPER(sc.country_name) = 'UNITED STATES OF AMERICA' THEN 'UNITED STATES'
+              WHEN UPPER(sc.country_name) = 'KOREA, REPUBLIC OF' THEN 'SOUTH KOREA'
+              WHEN UPPER(sc.country_name) = 'TAIWAN, REPUBLIC OF CHINA' THEN 'TAIWAN'
+              ELSE UPPER(sc.country_name) END = crm.country
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-SC-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-IQVIA-SC-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-IQVIA-SC-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_country_id
+      description: study_country_id must never be null
+    - rule_id: CTMS-IQVIA-SC-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_country_id
+      - study_id
+      - country_name
+      description: study_country_id must be unique per study_id and country_name
+    - rule_id: CTMS-IQVIA-SC-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: country_status
+      description: country_status must never be null
+- vendor: IQVIA
+  entity: study_metric
+  scd_business_keys:
+  - study_id
+  - parent_dataset
+  - parent_id
+  - metric_name
+  canonical_cols:
+  - study_id
+  - parent_dataset
+  - parent_id
+  - metric_name
+  - metric_number
+  - hash_key
+  column_types:
+    study_id: string
+    parent_dataset: string
+    parent_id: string
+    metric_name: string
+    metric_number: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - parent_dataset
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(clinical_study_source_id as string) as study_id,
+    'Subject' as parent_dataset,
+    cast(metric_name as string) as metric_name,
+    cast(metric_value as string) as metric_number,
+    MD5(clinical_study_source_id || COALESCE(metric_name,'') || '') as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-SME-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-IQVIA-SME-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-IQVIA-SME-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: parent_dataset
+      description: parent_dataset must never be null
+    - rule_id: CTMS-IQVIA-SME-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: parent_id
+      description: parent_id must never be null
+    - rule_id: CTMS-IQVIA-SME-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - study_id
+      - parent_dataset
+      - parent_id
+      - metric_name
+      description: parent_id must be unique per study_id and parent_dataset
+- vendor: IQVIA
+  entity: study_milestone
+  scd_business_keys:
+  - study_id
+  - parent_dataset
+  - parent_id
+  - milestone_name
+  - milestone_position
+  canonical_cols:
+  - study_id
+  - parent_dataset
+  - parent_id
+  - milestone_name
+  - milestone_position
+  - milestone_date
+  - hash_key
+  column_types:
+    study_id: string
+    parent_dataset: string
+    parent_id: string
+    milestone_name: string
+    milestone_position: string
+    milestone_date: date
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - parent_dataset
+  - milestone_name
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    {
+      "standard": "cast(clinical_study_source_id as String) as study_id,\n'STUDY' as parent_dataset,\ncast(milestone_name as String) as milestone_name,\ncast(milestone_type as String) as milestone_position,\ncase\n  when to_date(trim(milestone_date), 'MM/dd/yyyy') is not null\n    then upper(date_format(to_date(trim(milestone_date), 'MM/dd/yyyy'), 'dd-MMM-yyyy'))\n  else NULL\n  end as milestone_date,\nMD5(clinical_study_source_id || COALESCE(milestone_name,'') || COALESCE(milestone_type,'') || COALESCE(milestone_date,'')) as hash_key\n",
+      "post_processing": "deduplication:\n  keys: [study_id, study_id, parent_dataset, parent_id, milestone_name, milestone_position]\n  order_by: \n    - milestone_date \n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-SM-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-IQVIA-SM-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-IQVIA-SM-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: parent_dataset
+      description: parent_dataset must never be null
+    - rule_id: CTMS-IQVIA-SM-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: parent_id
+      description: parent_id must never be null
+    - rule_id: CTMS-IQVIA-SM-NNL-004
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: milestone_name
+      description: milestone_name must never be null
+    - rule_id: CTMS-IQVIA-SM-NNL-005
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: milestone_position
+      description: milestone_position shouldn't be null
+    - rule_id: CTMS-IQVIA-SM-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - study_id
+      - parent_dataset
+      - parent_id
+      - milestone_name
+      - milestone_position
+      description: milestone_name must be unique per study_id and milestone_position
+- vendor: IQVIA
+  entity: study_site
+  scd_business_keys:
+  - study_id
+  - study_country_id
+  - account_id
+  - site_number
+  - parent_site
+  canonical_cols:
+  - study_id
+  - study_country_id
+  - study_site_id
+  - account_id
+  - pi_contact_id
+  - pi_address_id
+  - site_number
+  - icn_region
+  - site_type
+  - study_site_status
+  - parent_site
+  - site_status_reason
+  - protocol_version
+  - hash_key
+  column_types:
+    study_id: string
+    study_country_id: string
+    study_site_id: string
+    account_id: string
+    pi_contact_id: string
+    pi_address_id: string
+    site_number: string
+    icn_region: string
+    site_type: string
+    study_site_status: string
+    parent_site: string
+    site_status_reason: string
+    protocol_version: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - study_site_id
+  - site_number
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: "cast(clinical_study_source_id as STRING) as study_id,\ncast(study_country_source_id as string) as\
+    \ study_country_id,\ncast(study_site_source_id as STRING) as study_site_id,\ncast(site_number as STRING) as site_number,\n\
+    'Main' as site_type, \ncast(site_number as STRING) as parent_site,\nMD5(concat(clinical_study_source_id, study_site_source_id,\
+    \ COALESCE(cast(site_number as STRING),''))) as hash_key\n"
+  cross_entity_sql: |
+    with site_actual as (
+      select /*+ BROADCAST(crm) */ distinct s.* EXCEPT (s.study_country_id, s.account_id, s.icn_region, s.hash_key),
+      cast(crm.study_country_id AS string) as study_country_id,
+      cast(sa.account_source_id AS string) as account_id,
+      case when crm.region = 'NA' then'North America'
+          when crm.region = 'APAC' then 'Asia/Pacific'
+          when crm.region = 'LATAM'THEN 'Latin America'
+          when crm.region = 'EMEA'THEN 'Europe/Africa'
+          else crm.region END AS icn_region,
+    md5(concat(coalesce(s.study_id, ''),COALESCE(crm.study_country_id, ''),coalesce(s.study_site_id, ''),'',coalesce(s.pi_contact_id, ''))) as hash_key
+    FROM {staging_table} s
+    LEFT JOIN {bronze:account_association} sa
+        ON s.study_site_id = sa.study_site_source_id
+    LEFT JOIN {bronze:study_country} sc
+        ON s.study_country_id = sc.study_country_source_id
+    LEFT JOIN {common:country_region_mapping} crm
+        ON case when upper(sc.study_region) = 'UNITED STATES OF AMERICA' then 'UNITED STATES'
+              when upper(sc.study_region) = 'KOREA, REPUBLIC OF' then 'SOUTH KOREA'
+              when upper(sc.study_region) = 'TAIWAN, REPUBLIC OF CHINA' then 'TAIWAN'
+              else upper(sc.study_region) end = crm.country)
+    select /*+ BROADCAST(spm) */ sa.* except(sa.site_type,sa.parent_site),
+      case when spm.parent_site_number is not null  then 'Satellite' else sa.site_type end as site_type,
+      case when spm.parent_site_number is not null  then spm.parent_site_number else sa.parent_site end as parent_site
+      from site_actual sa
+      left join {common:site_parent_mapping} spm
+      on sa.site_number = spm.site_number
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-SS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-IQVIA-SS-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-IQVIA-SS-NNL-002
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_country_id
+      description: study_country_id must never be null
+    - rule_id: CTMS-IQVIA-SS-NNL-003
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_site_id
+      description: study_site_id must never be null
+    - rule_id: CTMS-IQVIA-SS-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - study_site_id
+      - parent_site
+      description: study_site_id must be unique per study_id and parent_site
+    - rule_id: CTMS-IQVIA-SS-NNL-004
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site_number
+      description: site_number must never be null
+    - rule_id: CTMS-IQVIA-SS-NNL-005
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: parent_site
+      description: parent_site must never be null
+    - rule_id: CTMS-IQVIA-SS-NEQ-005
+      check: cross_field
+      severity: HIGH
+      mode: quarantine
+      field: parent_site
+      expression: parent_site IS NULL OR parent_site != '9999'
+      description: parent_site must not equal '9999'
+    - rule_id: CTMS-IQVIA-SS-UNQ-002
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - study_site_id
+      - site_number
+      - parent_site
+      description: site_number must be unique per study_id, study_site_id, and parent_site
+    - rule_id: CTMS-IQVIA-SS-NNL-006
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_site_status
+      description: study_site_status must never be null
+    - rule_id: CTMS-IQVIA-SS-NNL-007
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: account_id
+      description: account_id must never be null
+    - rule_id: CTMS-IQVIA-SS-NNL-008
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site_type
+      description: site_type must never be null
+- vendor: IQVIA
+  entity: study_subject
+  scd_business_keys:
+  - study_id
+  - study_site_id
+  - subject_id
+  - subject_number
+  canonical_cols:
+  - study_id
+  - study_site_id
+  - subject_id
+  - subject_number
+  - participant_number
+  - randomization_id
+  - enrollment_id
+  - subject_status
+  - subject_status_reason
+  - hash_key
+  column_types:
+    study_id: string
+    study_site_id: string
+    subject_id: string
+    subject_number: string
+    participant_number: string
+    randomization_id: string
+    enrollment_id: string
+    subject_status: string
+    subject_status_reason: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - subject_id
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject_id
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: subject_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: randomization_id
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: subject_status_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    cast(clinical_study_source_id as String) as study_id,
+    cast(study_site_source_id as String) as study_site_id,
+    cast(subject_source_id as String) as subject_id,
+    cast(subject_number as String) as subject_number,
+    right(cast(subject_number as String), 4) as participant_number,
+    cast(randomization_number as String) as randomization_id,
+    cast(subject_screen_number as String) as enrollment_id,
+    cast(scrn_fail_rsn as String) as subject_status_reason,
+    MD5(clinical_study_source_id || study_site_source_id || subject_source_id || COALESCE('', subject_status)) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-IQVIA-SSU-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-IQVIA-SSU-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-IQVIA-SSU-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_site_id
+      description: study_site_id must never be null
+    - rule_id: CTMS-IQVIA-SSU-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: subject_id
+      description: subject_id must never be null
+    - rule_id: CTMS-IQVIA-SSU-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - subject_id
+      - study_id
+      - study_site_id
+      description: subject_id must be unique per study_id and study_site_id
+- vendor: Medidata
+  entity: early_phase_subject_status
+  scd_business_keys:
+  - subject
+  - site_name
+  - study_id
+  canonical_cols:
+  - study_id
+  - subject
+  - participant_id
+  - participant_id_sk
+  - participant_number
+  - site_number
+  - site_name
+  - participant_status
+  - participant_type
+  - cohort
+  column_types:
+    study_id: string
+    subject: string
+    participant_id: string
+    participant_id_sk: string
+    participant_number: string
+    site_number: string
+    site_name: string
+    participant_status: string
+    participant_type: string
+    cohort: string
+  zorder_cols:
+  - study_id
+  - subject
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: cohort
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    - split(subject, '-') [2] as participant_id,
+    - md5(split(subject, '-') [2]) as participant_id_sk,
+    - split(subject, '-') [2] as participant_number,
+    - split(subject, '-') [2] as site_number
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: EDC-MDT-SS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: subject
+      description: subject must never be null
+    - rule_id: EDC-MDT-SS-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: participant_status
+      description: participant_status must never be null
+    - rule_id: EDC-MDT-SS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site_name
+      description: site_name must never be null
+    - rule_id: EDC-MDT-SS-NNL-004
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: EDC-MDT-SS-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - subject
+      - site_name
+      - study_id
+      description: subject must be unique per site_name and study_id
+- vendor: Medidata
+  entity: early_phase_subject_visit
+  scd_business_keys:
+  - participant_number
+  - site_name
+  - study_id
+  - visit_description
+  canonical_cols:
+  - study_id
+  - participant_number
+  - participant_id
+  - site_number
+  - site_name
+  - date_of_visit_scheduled
+  - date_of_visit_actual
+  - visit_description
+  column_types:
+    study_id: string
+    participant_number: string
+    participant_id: string
+    site_number: string
+    site_name: string
+    date_of_visit_scheduled: string
+    date_of_visit_actual: string
+    visit_description: string
+  zorder_cols:
+  - study_id
+  - participant_number
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: participant_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    - cast(subject AS string) AS participant_number,
+    - split(subject, '-')[2] AS participant_id,
+    - split(subject, '-')[1] AS site_number,
+    - to_date(coalesce(to_timestamp(date_of_visit_scheduled, 'yyyy-MM-dd HH:mm:ss'),to_timestamp(date_of_visit_scheduled))) AS date_of_visit_scheduled,
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: EDC-MDT-SSV-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: participant_number
+      description: subject must never be null
+    - rule_id: EDC-MDT-SSV-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: visit_description
+      description: visit_description must never be null
+    - rule_id: EDC-MDT-SSV-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site_name
+      description: site_name must never be null
+    - rule_id: EDC-MDT-SSV-NNL-004
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: EDC-MDT-SSV-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - participant_number
+      - site_name
+      - study_id
+      - visit_description
+      description: subject must be unique per site_name and study_id
+- vendor: Medidata
+  entity: missing_pgs
+  scd_business_keys:
+  - subject_number
+  - unique_id
+  - study_id
+  - log_line
+  - page_name
+  - visit_name
+  canonical_cols:
+  - priority_crf
+  - critical_page_yn
+  - country
+  - site
+  - subject_number
+  - subject_status
+  - study_stage
+  - enroll_or_screen_fail_date
+  - cohort
+  - treatment_arm
+  - sdvtier
+  - visit_name
+  - page_name
+  - log_line
+  - expected_date
+  - comments
+  - days_overdue
+  - overdue_timeframe
+  - unique_id
+  - study_id
+  column_types:
+    priority_crf: string
+    critical_page_yn: string
+    country: string
+    site: string
+    subject_number: string
+    subject_status: string
+    study_stage: string
+    enroll_or_screen_fail_date: date
+    cohort: string
+    treatment_arm: string
+    sdvtier: string
+    visit_name: string
+    page_name: string
+    log_line: string
+    expected_date: date
+    comments: string
+    days_overdue: string
+    overdue_timeframe: string
+    unique_id: string
+    study_id: string
+  zorder_cols:
+  - study_id
+  - unique_id
+  - subject_number
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    {
+      "standard": "REPLACE(UPPER(CAST(country AS string)), 'UNITED STATES OF AMERICA', 'UNITED STATES') AS country,\nCAST(site AS string) AS site,\nCAST(subject_number AS string) AS subject_number,\nCAST(subject_status AS string) AS subject_status,\nCAST(enroll_or_screen_fail_date AS string) AS enroll_or_screen_fail_date,\nCAST(treatment_arm AS string) AS treatment_arm,\nCAST(visit_name AS string) AS visit_name,\nCAST(page_name AS string) AS page_name,\nCAST(log_line AS string) AS log_line,\nCAST(expected_date AS string) AS expected_date,\nCAST(days_overdue AS string) AS days_overdue,\nCAST(overdue_timeframe AS string) AS overdue_timeframe\n",
+      "post_processing": "deduplication:\n  keys: [subject_number, unique_id, study_id, log_line, page_name, visit_name]\n  order_by:\n    - expected_date DESC\n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: EDC-MDT-MP-NNL-001
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: subject_number
+      description: subject_number must never be null
+    - rule_id: EDC-MDT-MP-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site
+      description: site must never be null
+    - rule_id: EDC-MDT-MP-NNL-003
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: studyid must never be null
+    - rule_id: EDC-MDT-MP-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - subject_number
+      - unique_id
+      - study_id
+      - log_line
+      - page_name
+      - visit_name
+      description: unique_id must be unique per subject_number and studyid
+- vendor: Medidata
+  entity: overall_edc_study_metrics
+  scd_business_keys:
+  - study_id
+  - country_name
+  canonical_cols:
+  - overall_edc_id_sk
+  - studyid
+  - country_name
+  - on_treatment
+  - screen_failed_subjects
+  - total_randomized_subjects
+  - in_survival_fu
+  - off_study
+  column_types:
+    overall_edc_id_sk: string
+    studyid: string
+    country_name: string
+    on_treatment: string
+    screen_failed_subjects: string
+    total_randomized_subjects: string
+    in_survival_fu: string
+    off_study: string
+  zorder_cols:
+  - study_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    {
+      "standard": "- MD5(COALESCE(country,'country') || COALESCE(studyid,'studyid')) AS overall_edc_id_sk,\n- case when upper(country) like '%SUBTOTAL' and UPPER(country) != 'SUBTOTAL' then \n  trim(substring(replace(upper(country), 'UNITED STATES OF AMERICA', 'UNITED STATES'), 1, length(replace(upper(country), 'UNITED STATES OF AMERICA', 'UNITED STATES')) - 9)) end as country_name\n",
+      "post_processing": "filters:\n- condition: \"country_name is not null\"\n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: EDC-MDT-OES-NNL-001
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      description: studyid must never be null
+    - rule_id: EDC-MDT-OES-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: country_name
+      description: country_name must never be null
+    - rule_id: EDC-MDT-OES-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - study_id
+      - country_name
+      description: country_name must be unique per studyid
+- vendor: Medidata
+  entity: query_details
+  scd_business_keys:
+  - study_id
+  - subject_number
+  - query_id
+  - unique_id
+  canonical_cols:
+  - critical_query_yn
+  - critical_variable_list
+  - country
+  - site
+  - subject_number
+  - participant_number
+  - subject_status
+  - enroll_or_screen_fail_date
+  - treatment_arm
+  - visit_name
+  - page_name
+  - record_id
+  - field_oid
+  - line_id
+  - query_recipient
+  - issued_by_name
+  - query_status
+  - days_open
+  - days_answered
+  - last_opened_query_text
+  - query_response
+  - opened_date
+  - answered_date
+  - answered_by
+  - cancelled_date
+  - cancelled_by
+  - closed_date
+  - closed_by
+  - days_open_to_answered
+  - days_answered_to_closed
+  - days_open_to_closed
+  - query_id
+  - unique_id
+  - page_link
+  - study_id
+  column_types:
+    critical_query_yn: string
+    critical_variable_list: string
+    country: string
+    site: string
+    subject_number: string
+    participant_number: string
+    subject_status: string
+    enroll_or_screen_fail_date: date
+    treatment_arm: string
+    visit_name: string
+    page_name: string
+    record_id: string
+    field_oid: string
+    line_id: string
+    query_recipient: string
+    issued_by_name: string
+    query_status: string
+    days_open: string
+    days_answered: string
+    last_opened_query_text: string
+    query_response: string
+    opened_date: date
+    answered_date: date
+    answered_by: string
+    cancelled_date: date
+    cancelled_by: string
+    closed_date: date
+    closed_by: string
+    days_open_to_answered: string
+    days_answered_to_closed: string
+    days_open_to_closed: string
+    query_id: string
+    unique_id: string
+    page_link: string
+    study_id: string
+  zorder_cols:
+  - study_id
+  - query_id
+  - unique_id
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    {
+      "standard": "REPLACE(UPPER(country), 'UNITED STATES OF AMERICA', 'UNITED STATES') AS country,\nCAST(site AS string) AS site,\nCAST(subject_number AS string) AS subject_number,\nright(cast(subject_number as string), 4) as participant_number,\nCAST(subject_status AS string) AS subject_status,\nCAST(enroll_or_screen_fail_date AS string) AS enroll_or_screen_fail_date,\nCAST(treatment_arm AS string) AS treatment_arm,\nCAST(visit_name AS string) AS visit_name,\nCAST(page_name AS string) AS page_name,\nCAST(record_id AS string) AS record_id,\nCAST(field_oid AS string) AS field_oid,\nCAST(line_id AS string) AS line_id,\nCAST(query_recipient AS string) AS query_recipient,\nCAST(issued_by_name AS string) AS issued_by_name,\nCAST(query_status AS string) AS query_status,\nCAST(days_open AS string) AS days_open,\nCAST(days_answered AS string) AS days_answered,\nCAST(last_opened_query_text AS string) AS last_opened_query_text,\nCAST(query_response AS string) AS query_response,\ncoalesce(to_date(opened_date, 'ddMMMyyyy'), to_date(coalesce(to_timestamp(opened_date, 'yyyy-MM-dd HH:mm:ss'), to_timestamp(opened_date)))) AS opened_date,\ncoalesce(to_date(answered_date, 'ddMMMyyyy'), to_date(coalesce(to_timestamp(answered_date, 'yyyy-MM-dd HH:mm:ss'), to_timestamp(answered_date)))) AS answered_date,\nCAST(answered_by AS string) AS answered_by,\ncoalesce(to_date(cancelled_date, 'ddMMMyyyy'), to_date(coalesce(to_timestamp(cancelled_date, 'yyyy-MM-dd HH:mm:ss'), to_timestamp(cancelled_date)))) AS cancelled_date,\nCAST(cancelled_by AS string) AS cancelled_by,\ncoalesce(to_date(closed_date, 'ddMMMyyyy'), to_date(coalesce(to_timestamp(closed_date, 'yyyy-MM-dd HH:mm:ss'), to_timestamp(closed_date)))) AS closed_date,\nCAST(closed_by AS string) AS closed_by,\nCAST(days_open_to_answered AS string) AS days_open_to_answered,\nCAST(days_answered_to_closed AS string) AS days_answered_to_closed,\nCAST(days_open_to_closed AS string) AS days_open_to_closed,\nCAST(query_id AS string) AS query_id\n",
+      "post_processing": "deduplication:\n  keys: [query_id, subject_number, study_id, unique_id]\n  order_by:\n    - opened_date DESC\n    - closed_date DESC\n    - answered_date DESC\n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: EDC-MDT-QD-NNL-001
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site
+      description: site must never be null
+    - rule_id: EDC-MDT-QD-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: subject_number
+      description: subject_number must never be null
+    - rule_id: EDC-MDT-QD-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: query_id
+      description: query_id must never be null
+    - rule_id: EDC-MDT-QD-NNL-004
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: studyid must never be null
+    - rule_id: EDC-MDT-QD-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - query_id
+      - subject_number
+      - study_id
+      - unique_id
+      description: query_id must be unique per subject_number and studyid
+- vendor: Medidata
+  entity: subject_summary
+  scd_business_keys:
+  - subject_number
+  - site
+  - study_id
+  canonical_cols:
+  - country
+  - site
+  - subject_number
+  - participant_number
+  - subject_status
+  - study_phase
+  - date_of_first_icf
+  - enroll_or_screen_fail_date
+  - cohort_desc
+  - cohort
+  - treatment_arm
+  - tumor_type
+  - race
+  - ethnic
+  - dose_level_treatment_arm
+  - most_recent_visit
+  - most_recent_date_of_visit
+  - eotxb_date
+  - death_date
+  - eorfup_date
+  - eos_date
+  - eos_reason
+  - esfu_date
+  - esfu_reason
+  - total_expected_pgs
+  - missing_pgs_entry_not_started
+  - missing_lt30_days
+  - missing_31_60_days
+  - missing_61_90_days
+  - missing_gt90_days
+  - entered_pgs
+  - sv_not_started
+  - sv_not_started_lt30_days
+  - sv_not_started_31_60_days
+  - sv_not_started_61_90_days
+  - sv_not_started_gt90_days
+  - sv_incomplete
+  - sv_complete
+  - open
+  - open_lt30_days
+  - open_31_60_days
+  - open_61_90_days
+  - open_gt90_days
+  - answered_pending_review
+  - lt30_days_after_report_date
+  - days_31_60_after_report_date
+  - days_61_90_after_report_date
+  - days_90_180_after_report_date
+  - study_id
+  column_types:
+    country: string
+    site: string
+    subject_number: string
+    participant_number: string
+    subject_status: string
+    study_phase: string
+    date_of_first_icf: string
+    enroll_or_screen_fail_date: date
+    cohort_desc: string
+    cohort: string
+    treatment_arm: string
+    tumor_type: string
+    race: string
+    ethnic: string
+    dose_level_treatment_arm: string
+    most_recent_visit: string
+    most_recent_date_of_visit: string
+    eotxb_date: date
+    death_date: date
+    eorfup_date: date
+    eos_date: date
+    eos_reason: string
+    esfu_date: date
+    esfu_reason: string
+    total_expected_pgs: string
+    missing_pgs_entry_not_started: string
+    missing_lt30_days: string
+    missing_31_60_days: string
+    missing_61_90_days: string
+    missing_gt90_days: string
+    entered_pgs: string
+    sv_not_started: string
+    sv_not_started_lt30_days: string
+    sv_not_started_31_60_days: string
+    sv_not_started_61_90_days: string
+    sv_not_started_gt90_days: string
+    sv_incomplete: string
+    sv_complete: string
+    open: string
+    open_lt30_days: string
+    open_31_60_days: string
+    open_61_90_days: string
+    open_gt90_days: string
+    answered_pending_review: string
+    lt30_days_after_report_date: date
+    days_31_60_after_report_date: date
+    days_61_90_after_report_date: date
+    days_90_180_after_report_date: date
+    study_id: string
+  zorder_cols:
+  - study_id
+  - site
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: treatment_arm
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: cohort
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: dose_level_treatment_arm
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: race
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: ethnic
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: death_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: eos_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: esfu_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: date_of_first_icf
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: enroll_or_screen_fail_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    - CASE
+      WHEN UPPER(country) = 'UNITED STATES OF AMERICA' THEN 'UNITED STATES'
+      WHEN UPPER(country) = 'CZECHIA'                  THEN 'CZECH REPUBLIC'
+      ELSE UPPER(country)
+      END AS country,
+    - CAST(site AS string) AS site,
+    - CAST(subject_number AS string) AS subject_number,
+    - right(cast(subject_number as string), 4) as participant_number,
+    - CAST(subject_status AS string) AS subject_status,
+    - CAST(date_of_first_icf AS string) AS date_of_first_icf,
+    - CAST(enroll_or_screen_fail_date AS string) AS enroll_or_screen_fail_date,
+    - CAST(treatment_arm AS string) AS treatment_arm,
+    - CAST(most_recent_visit AS string) AS most_recent_visit,
+    - CAST(most_recent_date_of_visit AS string) AS most_recent_date_of_visit,
+    - CAST(death_date AS string) AS death_date,
+    - CAST(eos_date AS string) AS eos_date,
+    - CAST(eos_reason AS string) AS eos_reason,
+    - CAST(total_expected_pgs AS INT) AS total_expected_pgs
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: EDC-MDT-SS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: subject_number
+      description: subject_number must never be null
+    - rule_id: EDC-MDT-SS-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: subject_status
+      description: subject_status must never be null
+    - rule_id: EDC-MDT-SS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site
+      description: site must never be null
+    - rule_id: EDC-MDT-SS-NNL-004
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: studyid must never be null
+    - rule_id: EDC-MDT-SS-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - subject_number
+      - site
+      - study_id
+      description: subject_number must be unique per site and studyid
+- vendor: Medidata
+  entity: subject_summary_by_visit
+  scd_business_keys:
+  - subject_number
+  - site
+  - study_id
+  - visit_name
+  - total_expected_pgs
+  canonical_cols:
+  - country
+  - site
+  - subject_number
+  - participant_number
+  - subject_status
+  - date_of_first_icf
+  - enroll_or_screen_fail_date
+  - protocol_version_randomized
+  - cohort
+  - treatment_arm
+  - most_recent_visit
+  - most_recent_date_of_visit
+  - eotxb_date
+  - nivolumab_eot_date
+  - ipilimumab_eot_date
+  - atezo_eot_date
+  - sunitinib_eot_date
+  - death_date
+  - eorfup_date
+  - eos_date
+  - eos_reason
+  - esfu_date
+  - esfu_reason
+  - visit_name
+  - total_expected_pgs
+  - study_id
+  column_types:
+    country: string
+    site: string
+    subject_number: string
+    participant_number: string
+    subject_status: string
+    date_of_first_icf: string
+    enroll_or_screen_fail_date: date
+    protocol_version_randomized: string
+    cohort: string
+    treatment_arm: string
+    most_recent_visit: string
+    most_recent_date_of_visit: string
+    eotxb_date: date
+    nivolumab_eot_date: date
+    ipilimumab_eot_date: date
+    atezo_eot_date: date
+    sunitinib_eot_date: date
+    death_date: date
+    eorfup_date: date
+    eos_date: date
+    eos_reason: string
+    esfu_date: date
+    esfu_reason: string
+    visit_name: string
+    total_expected_pgs: string
+    study_id: string
+  zorder_cols:
+  - study_id
+  - subject_number
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: treatment_arm
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: cohort
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: death_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: eos_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: esfu_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: date_of_first_icf
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: enroll_or_screen_fail_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    {
+      "standard": "REPLACE(UPPER(country), 'UNITED STATES OF AMERICA', 'UNITED STATES') AS country,\nCAST(site AS string) AS site,\nCAST(subject_number AS string) AS subject_number,\nright(cast(subject_number as string), 4) as participant_number,\nCAST(subject_status AS string) AS subject_status,\nCAST(date_of_first_icf AS string) AS date_of_first_icf,\nCAST(enroll_or_screen_fail_date AS string) AS enroll_or_screen_fail_date,\nCAST(treatment_arm AS string) AS treatment_arm,\nCAST(most_recent_visit AS string) AS most_recent_visit,\nto_date(`most_recent_date_of_visit`, 'ddMMMyyyy') AS most_recent_date_of_visit,\nCAST(death_date AS string) AS death_date,\nCAST(eos_date AS string) AS eos_date,\nCAST(eos_reason AS string) AS eos_reason,\nCAST(visit_name AS string) AS visit_name\n",
+      "post_processing": "filters:\n  - condition: \"most_recent_date_of_visit IS NOT NULL\"\ndeduplication:\n  keys: [subject_number, site, study_id, visit_name]\n  order_by: \n    - most_recent_date_of_visit \n    - total_expected_pgs DESC\n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: EDC-MDT-SSV-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: subject_number
+      description: subject_number must never be null
+    - rule_id: EDC-MDT-SSV-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: subject_status
+      description: subject_status must never be null
+    - rule_id: EDC-MDT-SSV-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site
+      description: site must never be null
+    - rule_id: EDC-MDT-SSV-NNL-004
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: studyid must never be null
+    - rule_id: EDC-MDT-SSV-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - subject_number
+      - site
+      - study_id
+      - visit_name
+      description: subject_number must be unique per site and studyid
+- vendor: PAREXEL
+  entity: site_contact_details
+  scd_business_keys:
+  - study_id
+  - site_number
+  - site_name
+  canonical_cols:
+  - study_id
+  - study_site_id_sk
+  - site_number
+  - site_status
+  - site_name
+  - department
+  - address
+  - address_2
+  - address_3
+  - city
+  - state
+  - site_country
+  - postal_zip_code
+  - pi_name
+  - pi_phone
+  - pi_email
+  - sc_name
+  - sc_phone
+  - sc_email
+  column_types:
+    study_id: string
+    study_site_id_sk: string
+    site_number: string
+    site_status: string
+    site_name: string
+    department: string
+    address: string
+    address_2: string
+    address_3: string
+    city: string
+    state: string
+    site_country: string
+    postal_zip_code: string
+    pi_name: string
+    pi_phone: string
+    pi_email: string
+    sc_name: string
+    sc_phone: string
+    sc_email: string
+  zorder_cols:
+  - study_id
+  - site_number
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_number as string) as study_id,
+    lifecycle_state as site_status,
+    address_1 as address,
+    country as site_country,
+    md5(study_number||site_number) as study_site_id_sk,
+  cross_entity_sql: "with pi_info as(\n  select \n    study_id,\n    site_number,\n    external_id,\n    full_name as pi_name,\
+    \ \n    phone as pi_phone,\n    email as pi_email \n    FROM {staging_table}\n    where study_team_role in('Primary Investigator','Principal\
+    \ Investigator')),\nsc_info as(\n    select \n    study_id,\n    site_number,\n    external_id, \n    sc_name, \n    sc_email,\
+    \ \n    sc_phone from (\n    select study_id,\n        site_number,\n        start_date,\n        full_name as sc_name,\n\
+    \        email as sc_email, \n        phone as sc_phone,\n        external_id as external_id,\n    row_number()OVER(partition\
+    \ by study_id||site_number\n    order by (case when full_name is not null and  phone is not null and  email is not null\
+    \ then  1 else 2 end),\n        site_number,external_id desc, cast(start_date as date) DESC) as CA_RANK\n    FROM {staging_table}\
+    \   \n    where study_team_role in ('Study Coordinator','Study Coordinator - Unblinded')\n    group by study_id, site_number,\
+    \ start_date, full_name, email , phone , external_id \n  ) as a where ca_rank= 1\n)\nselect distinct si.study_id,si.study_site_id_sk,\
+    \ si.site_number, si.site_status, si.site_name, si.department, si.address, si.address_2, si.address_3, si.city, si.state,\
+    \ si.site_country, si.postal_zip_code,\n  pi.pi_name, pi.pi_phone, pi.pi_email, sc.sc_name, sc.sc_phone, sc.sc_email\n\
+    \  from \n  {staging_table} si\n    left join pi_info pi\n    on si.site_number= pi.site_number\n    and si.study_id =\
+    \ pi.study_id\n    left join sc_info sc\n    on si.site_number= sc.site_number\n    and si.study_id = sc.study_id\n"
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PREX-STU-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PREX-STU-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+- vendor: PAREXEL
+  entity: study_site_phase
+  scd_business_keys:
+  - study_id
+  - study_country_id
+  - site_number
+  - parent_site_number
+  canonical_cols:
+  - study_id
+  - region
+  - country_name
+  - study_country_id
+  - site_number
+  - parent_site_number
+  - pi_name
+  - site_name
+  - study_site_status
+  - actual_site_selected_date
+  - current_monhth_expected_for_activation
+  - actual_site_ready_to_enroll
+  column_types:
+    study_id: string
+    region: string
+    country_name: string
+    study_country_id: string
+    site_number: string
+    parent_site_number: string
+    pi_name: string
+    site_name: string
+    study_site_status: string
+    actual_site_selected_date: date
+    current_monhth_expected_for_activation: string
+    actual_site_ready_to_enroll: string
+  zorder_cols:
+  - study_id
+  - study_country_id
+  - site_number
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    {
+      "standard": "case when country = 'AUS' then 'AUSTRALIA' when country = 'SPN' then  'SPAIN' when country = 'SKOR' then 'SOUTH KOREA' when country = 'USA' then 'UNITED STATES' when country = 'UK' then 'UNITED KINGDOM' when country = 'FRA' then 'FRANCE' when country = 'ITA' then 'ITALY' else country end as country_name,\ncast(site_number as string) as site_number,\ncast(site_name as string) as site_name,\ncast (case when site_number ='119' then '108' else site_number end as string) as parent_site_number,\ncast (investigator_name  as string) as pi_name,\ncase when site_status  = 'Site Activated' then 'Enrollment Open' when site_status  = 'Site Selected'then 'Selected' else site_status end as study_site_status,\ncase when length(site_selection_date)> 9 or length(site_selection_date)< 8  then null else cast(site_selection_date as string) end as actual_site_selected_date,\ncase when length(site_activation_date)> 9 or length(site_activation_date)< 8 then NULL::date else to_date(site_activation_date ,'dd-MMM-yy') end as activation_date,\nmd5(study_id||country||site_number)as hash_key\n",
+      "post_processing": "filters:\n- condition: \"site_number is not null\"\n"
+    }
+  cross_entity_sql: |
+    select /*+ BROADCAST(crm) */ sc.* except (region, study_country_id,actual_site_ready_to_enroll),
+      crm.region ,
+      crm.study_country_id,
+      date_format(cast(activation_date as date), 'dd-MMM-yy') as actual_site_ready_to_enroll
+      from {staging_table} sc
+      left join {common:country_region_mapping} crm
+      on sc.country_name = crm.country
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PREX-SS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PREX-SS-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PREX-SS-NNL-002
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_country_id
+      description: study_country_id must never be null
+    - rule_id: CTMS-PREX-SS-NNL-004
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site_number
+      description: site_number must never be null
+    - rule_id: CTMS-PREX-SS-NNL-005
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: parent_site_number
+      description: parent_site must never be null
+    - rule_id: CTMS-PREX-SS-NEQ-005
+      check: cross_field
+      severity: HIGH
+      mode: quarantine
+      field: parent_site_number
+      expression: parent_site_number IS NULL OR parent_site_number != '9999'
+      description: parent_site must not equal '9999'
+    - rule_id: CTMS-PREX-SS-UNQ-002
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - site_number
+      - parent_site_number
+      description: site_number must be unique per study_id, site_number, and parent_site_number
+    - rule_id: CTMS-PREX-SS-NNL-006
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_site_status
+      description: study_site_status must never be null
+- vendor: PRA
+  entity: account
+  scd_business_keys:
+  - account_id
+  canonical_cols:
+  - account_id
+  - name
+  - hash_key
+  column_types:
+    account_id: string
+    name: string
+    hash_key: string
+  zorder_cols:
+  - account_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(account_id as string) as account_id,
+    cast(name as string) as name,
+    md5(account_id) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-AC-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: account_id
+      description: account_id must never be null
+    - rule_id: CTMS-PRA-AC-UNQ-001
+      check: unique
+      severity: HIGH
+      mode: quarantine
+      field: account_id
+      description: account_id must be unique
+    - rule_id: CTMS-PRA-AC-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: name
+      description: name must never be null
+- vendor: PRA
+  entity: account_association
+  scd_business_keys:
+  - study_id
+  - account_id
+  - address_id
+  - associated_dataset
+  - associated_record_id
+  canonical_cols:
+  - study_id
+  - account_id
+  - associated_dataset
+  - associated_record_id
+  - address_id
+  - type
+  - active_flag
+  - hash_key
+  column_types:
+    study_id: string
+    account_id: string
+    associated_dataset: string
+    associated_record_id: string
+    address_id: string
+    type: string
+    active_flag: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - account_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id,
+    cast(account_id as string) as account_id,
+    cast(associated_record_id as string) as associated_record_id,
+    cast(address_id as bigint) as address_id,
+    md5(study_protocol_number || account_id || coalesce(associated_record_id,'') || coalesce(active_flag,'')) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-AA-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-AA-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-AA-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: account_id
+      description: account_id must never be null
+    - rule_id: CTMS-PRA-AA-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: associated_record_id
+      description: associated_record_id must never be null
+    - rule_id: CTMS-PRA-AA-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - account_id
+      - associated_record_id
+      - address_id
+      description: associated_record_id must be unique per study_id and account_id
+- vendor: PRA
+  entity: address
+  scd_business_keys:
+  - address_id
+  canonical_cols:
+  - address_id
+  - line1
+  - line2
+  - line3
+  - city
+  - state_province
+  - postal_code
+  - country
+  - hash_key
+  column_types:
+    address_id: string
+    line1: string
+    line2: string
+    line3: string
+    city: string
+    state_province: string
+    postal_code: string
+    country: string
+    hash_key: string
+  zorder_cols:
+  - address_id
+  - country
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(address_id as string) as address_id,
+    md5(address_id) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-AD-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: address_id
+      description: address_id must never be null
+    - rule_id: CTMS-PRA-AD-UNQ-001
+      check: unique
+      severity: HIGH
+      mode: quarantine
+      field: address_id
+      description: address_id must be unique
+- vendor: PRA
+  entity: address_association
+  scd_business_keys:
+  - study_id
+  - address_id
+  - associated_record_id
+  - type
+  canonical_cols:
+  - study_id
+  - address_id
+  - associated_dataset
+  - associated_record_id
+  - type
+  - hash_key
+  column_types:
+    study_id: string
+    address_id: string
+    associated_dataset: string
+    associated_record_id: string
+    type: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - address_id
+  - associated_record_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id,
+    cast(address_id as string) as address_id,
+    cast(associated_record_id as string) as associated_record_id,
+    md5(study_protocol_number || address_id || coalesce(associated_record_id,'') || coalesce(type,'')) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-ADA-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-ADA-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-ADA-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: address_id
+      description: address_id must never be null
+    - rule_id: CTMS-PRA-ADA-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: associated_record_id
+      description: associated_record_id must never be null
+    - rule_id: CTMS-PRA-ADA-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - address_id
+      - associated_record_id
+      - type
+      description: associated_record_id must be unique per study_id, address_id, and type
+- vendor: PRA
+  entity: contact
+  scd_business_keys:
+  - contact_id
+  canonical_cols:
+  - contact_id
+  - first_name
+  - last_name
+  - mid_name
+  - title
+  - degree
+  - inv_flag
+  - email
+  - email_2
+  - email_3
+  - phone_number
+  - fax_number
+  - cell_number
+  - home_number
+  - pager_number
+  - pager_pin
+  - alt_phone_number
+  - hash_key
+  column_types:
+    contact_id: string
+    first_name: string
+    last_name: string
+    mid_name: string
+    title: string
+    degree: string
+    inv_flag: string
+    email: string
+    email_2: string
+    email_3: string
+    phone_number: string
+    fax_number: string
+    cell_number: string
+    home_number: string
+    pager_number: string
+    pager_pin: string
+    alt_phone_number: string
+    hash_key: string
+  zorder_cols:
+  - contact_id
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: first_name
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: last_name
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: mid_name
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: email
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: email_2
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: email_3
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: phone_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: cell_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: home_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: alt_phone_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: fax_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: pager_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: pager_pin
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    cast(contact_id as string) as contact_id,
+    md5(contact_id) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-CO-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: contact_id
+      description: contact_id must never be null
+- vendor: PRA
+  entity: contact_association
+  scd_business_keys:
+  - study_id
+  - contact_id
+  - associated_record_id
+  - account_id
+  - role
+  - start_date
+  - end_date
+  canonical_cols:
+  - study_id
+  - contact_id
+  - associated_dataset
+  - associated_record_id
+  - address_id
+  - account_id
+  - role
+  - start_date
+  - end_date
+  - hash_key
+  column_types:
+    study_id: string
+    contact_id: string
+    associated_dataset: string
+    associated_record_id: string
+    address_id: string
+    account_id: string
+    role: string
+    start_date: date
+    end_date: date
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - contact_id
+  - associated_record_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id,
+    cast(contact_id as string) as contact_id,
+    cast(associated_dataset as string) as associated_dataset,
+    cast(associated_record_id as string) as associated_record_id,
+    cast(address_id as string) as address_id,
+    cast(account_id as string) as account_id,
+    cast(role as string) as role,
+    cast(start_date as string) as start_date,
+    cast(end_date as string) as end_date,
+    md5(study_protocol_number || contact_id || coalesce(associated_dataset,'') || coalesce(associated_record_id,'') || coalesce(start_date,'') || coalesce(role,'role')) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-CA-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-CA-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-CA-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: contact_id
+      description: contact_id must never be null
+    - rule_id: CTMS-PRA-CA-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: associated_record_id
+      description: associated_record_id must never be null
+    - rule_id: CTMS-PRA-CA-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - contact_id
+      - associated_record_id
+      - role
+      description: associated_record_id must be unique per study_id, contact_id, and role
+- vendor: PRA
+  entity: enroll_forecast
+  scd_business_keys:
+  - study_id
+  - phase
+  - cohort
+  - country_name
+  - month_end_date
+  canonical_cols:
+  - study_id
+  - phase
+  - cohort
+  - country_name
+  - month_end_date
+  - planned_subjects
+  - hash_key
+  column_types:
+    study_id: string
+    phase: string
+    cohort: string
+    country_name: string
+    month_end_date: date
+    planned_subjects: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - month_end_date
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id,
+    cast(phase as string) as phase,
+    cast(cohort as string) as cohort,
+    REPLACE(UPPER(country_name), 'UNITED STATES OF AMERICA', 'UNITED STATES') as country_name,
+    cast(month_end_date as string) as month_end_date,
+    cast(planned_subjects as string) as planned_subjects,
+    md5(study_protocol_number || coalesce(cast(phase as string),'PHASE') || coalesce(cast(cohort as string),'COHORT') || country_name || month_end_date) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-EF-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-EF-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-EF-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: month_end_date
+      description: month_end_date must never be null
+    - rule_id: CTMS-PRA-EF-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: planned_subjects
+      description: planned_subjects must never be null
+- vendor: PRA
+  entity: enroll_projection
+  scd_business_keys:
+  - study_id
+  - phase
+  - cohort
+  - country_name
+  - month_end_date
+  canonical_cols:
+  - study_id
+  - phase
+  - cohort
+  - country_name
+  - month_end_date
+  - planned_subjects
+  - hash_key
+  column_types:
+    study_id: string
+    phase: string
+    cohort: string
+    country_name: string
+    month_end_date: date
+    planned_subjects: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - month_end_date
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    {
+      "standard": "cast(study_protocol_number as string) as study_id,\ncast(phase as string) as phase,\ncast(cohort as string) as cohort,\nREPLACE(UPPER(country_name), 'UNITED STATES OF AMERICA', 'UNITED STATES') as country_name,\ncast(month_end_date as string) as month_end_date,\ncast(planned_subjects as INTEGER) as planned_subjects,\nmd5(study_protocol_number || coalesce(phase,'phase') || coalesce(cohort,'cohort') || country_name || month_end_date) as hash_key\n",
+      "post_processing": "latest:\n  column: \"month_end_date\"\n  partition_by:\n    - \"study_id\"\n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-EP-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-EP-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-EP-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: month_end_date
+      description: month_end_date must never be null
+    - rule_id: CTMS-PRA-EP-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: planned_subjects
+      description: planned_subjects must never be null
+- vendor: PRA
+  entity: proj_sites
+  scd_business_keys:
+  - study_id
+  - country_name
+  - month_end_date
+  canonical_cols:
+  - study_id
+  - country_name
+  - month_end_date
+  - planned_sites
+  - hash_key
+  column_types:
+    study_id: string
+    country_name: string
+    month_end_date: date
+    planned_sites: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - country_name
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    {
+      "standard": "cast(study_protocol_number as string) as study_id,\nREPLACE(UPPER(country_name), 'UNITED STATES OF AMERICA', 'UNITED STATES') as country_name,\nCOALESCE(TO_DATE(month_end_date, 'yyyy-MM-dd'),TO_DATE(UPPER(month_end_date), 'dd-MMM-yyyy'),TO_DATE(month_end_date, 'MM/dd/yyyy')) as month_end_date,\nmd5(study_protocol_number || country_name || month_end_date) as hash_key\n",
+      "post_processing": "filters:\n  - condition: \"country_name is not null\"\nlatest:\n  column: \"month_end_date\"\n  partition_by:\n    - \"study_id\"\n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-PS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-PS-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-PS-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: planned_sites
+      description: planned_sites must never be null
+    - rule_id: CTMS-PRA-PS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: country_name
+      description: country_name must never be null
+    - rule_id: CTMS-PRA-PS-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - country_name
+      - study_id
+      description: country_name must be unique per study_id
+    - rule_id: CTMS-PRA-PS-NNL-004
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: month_end_date
+      description: month_end_date must never be null
+- vendor: PRA
+  entity: study
+  scd_business_keys:
+  - study_id
+  canonical_cols:
+  - study_id
+  - study_title
+  - status
+  - therapeutic_area
+  - study_type
+  - unblinded
+  - study_drug
+  - hash_key
+  column_types:
+    study_id: string
+    study_title: string
+    status: string
+    therapeutic_area: string
+    study_type: string
+    unblinded: string
+    study_drug: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-STU-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-STU-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+- vendor: PRA
+  entity: study_country
+  scd_business_keys:
+  - study_id
+  - study_country_id
+  canonical_cols:
+  - study_id
+  - study_country_id
+  - country_name
+  - country_status
+  - hash_key
+  column_types:
+    study_id: string
+    study_country_id: string
+    country_name: string
+    country_status: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - study_country_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id,
+    cast(study_country_id as string) as study_country_id,
+    case
+      when country_name = 'KOREA, REPUBLIC OF'       then 'SOUTH KOREA'
+      when country_name = 'UNITED STATES OF AMERICA' then 'UNITED STATES'
+      else country_name
+      end as country_name,
+    cast(country_status as string) as country_status,
+    md5(study_protocol_number || study_country_id) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-SC-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-SC-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-SC-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_country_id
+      description: study_country_id must never be null
+    - rule_id: CTMS-PRA-SC-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_country_id
+      - study_id
+      - country_name
+      description: study_country_id must be unique per study_id and country_name
+    - rule_id: CTMS-PRA-SC-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: country_status
+      description: country_status must never be null
+- vendor: PRA
+  entity: study_metric
+  scd_business_keys:
+  - study_id
+  - parent_dataset
+  - parent_id
+  - metric_name
+  canonical_cols:
+  - study_id
+  - parent_dataset
+  - parent_id
+  - metric_name
+  - metric_number
+  - hash_key
+  column_types:
+    study_id: string
+    parent_dataset: string
+    parent_id: string
+    metric_name: string
+    metric_number: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - parent_dataset
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id,
+    cast(parent_dataset as string) as parent_dataset,
+    cast(parent_id as string) as parent_id,
+    cast(metric_name as string) as metric_name,
+    md5(study_protocol_number || metric_name || coalesce(parent_id,'')) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-SME-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-SME-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-SME-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: parent_dataset
+      description: parent_dataset must never be null
+    - rule_id: CTMS-PRA-SME-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: parent_id
+      description: parent_id must never be null
+    - rule_id: CTMS-PRA-SME-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - study_id
+      - parent_dataset
+      - parent_id
+      - metric_name
+      description: parent_id must be unique per study_id and parent_dataset
+- vendor: PRA
+  entity: study_milestone
+  scd_business_keys:
+  - study_id
+  - parent_dataset
+  - parent_id
+  - milestone_name
+  - milestone_position
+  canonical_cols:
+  - study_id
+  - parent_dataset
+  - parent_id
+  - milestone_name
+  - milestone_position
+  - milestone_date
+  - hash_key
+  column_types:
+    study_id: string
+    parent_dataset: string
+    parent_id: string
+    milestone_name: string
+    milestone_position: string
+    milestone_date: date
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - parent_dataset
+  - milestone_name
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    {
+      "standard": "cast(study_protocol_number as string) as study_id,\ncast(parent_dataset as string) as parent_dataset,\ncast(parent_id as string) as parent_id,\ncast(milestone_name as string) as milestone_name,\ncast(milestone_position as string) as milestone_position,\ncoalesce(to_date(milestone_date, 'yyyy-MM-dd'), to_date(initcap(milestone_date), 'dd-MMM-yyyy'))as  milestone_date,\nmd5(study_protocol_number || coalesce(parent_id,'') || coalesce(milestone_name,'') || coalesce(milestone_position,'') || coalesce(milestone_date,'')) as hash_key\n",
+      "post_processing": "deduplication:\n  keys: [study_id, study_id, parent_dataset, parent_id, milestone_name, milestone_position]\n  order_by: \n    - milestone_date \n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-SM-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-SM-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-SM-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: parent_dataset
+      description: parent_dataset must never be null
+    - rule_id: CTMS-PRA-SM-NNL-004
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: milestone_name
+      description: milestone_name must never be null
+    - rule_id: CTMS-PRA-SM-NNL-005
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: milestone_position
+      description: milestone_position shouldn't be null
+    - rule_id: CTMS-PRA-SM-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - study_id
+      - parent_dataset
+      - parent_id
+      - milestone_name
+      - milestone_position
+      description: milestone_name must be unique per study_id and milestone_position
+- vendor: PRA
+  entity: study_site
+  scd_business_keys:
+  - study_id
+  - study_country_id
+  - account_id
+  - site_number
+  - parent_site
+  canonical_cols:
+  - study_id
+  - study_country_id
+  - study_site_id
+  - account_id
+  - pi_contact_id
+  - pi_address_id
+  - site_number
+  - icn_region
+  - site_type
+  - study_site_status
+  - parent_site
+  - site_status_reason
+  - protocol_version
+  - hash_key
+  column_types:
+    study_id: string
+    study_country_id: string
+    study_site_id: string
+    account_id: string
+    pi_contact_id: string
+    pi_address_id: string
+    site_number: string
+    icn_region: string
+    site_type: string
+    study_site_status: string
+    parent_site: string
+    site_status_reason: string
+    protocol_version: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - study_site_id
+  - site_number
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id,
+    cast(study_site_id as string) as study_site_id,
+    cast(study_country_id as string) as study_country_id,
+    cast(account_id as string) as account_id,
+    cast(pi_address_id as string) as pi_address_id,
+    cast(pi_contact_id as string) as pi_contact_id,
+    cast(site_number as string) as site_number,
+    md5(study_protocol_number || coalesce(cast(study_country_id as string),'') || coalesce(cast(site_number as string),'') || coalesce(account_id,'')) as hash_key
+  cross_entity_sql: "SELECT /*+ BROADCAST(crm) */ DISTINCT s.* EXCEPT (icn_region),\n  CASE WHEN crm.region = 'NA' THEN 'North\
+    \ America'\n      WHEN crm.region = 'APAC' THEN 'Asia/Pacific'\n      WHEN crm.region = 'LATAM' THEN 'Latin America'\n\
+    \      WHEN crm.region = 'EMEA' THEN 'Europe/Africa'\n      ELSE crm.region END AS icn_region\nFROM {staging_table} s\n\
+    LEFT JOIN {bronze:study_country} sc\n    ON s.study_country_id = sc.study_country_id\nLEFT JOIN {common:country_region_mapping}\
+    \ crm\n    ON CASE WHEN UPPER(sc.country_name) = 'UNITED STATES OF AMERICA' THEN 'UNITED STATES' \n    WHEN UPPER(sc.country_name)\
+    \ = 'KOREA, REPUBLIC OF' THEN 'SOUTH KOREA'\n    WHEN UPPER(sc.country_name) = 'TAIWAN, REPUBLIC OF CHINA' THEN 'TAIWAN'\n\
+    \    ELSE UPPER(sc.country_name) END = crm.country\n"
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-SS-NNL-001
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-SS-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-SS-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_country_id
+      description: study_country_id must never be null
+    - rule_id: CTMS-PRA-SS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_site_id
+      description: study_site_id must never be null
+    - rule_id: CTMS-PRA-SS-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - study_site_id
+      - parent_site
+      description: study_site_id must be unique per study_id and parent_site
+    - rule_id: CTMS-PRA-SS-NNL-004
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site_number
+      description: site_number must never be null
+    - rule_id: CTMS-PRA-SS-NNL-005
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: parent_site
+      description: parent_site must never be null
+    - rule_id: CTMS-PRA-SS-NEQ-005
+      check: cross_field
+      severity: HIGH
+      mode: quarantine
+      field: parent_site
+      expression: parent_site IS NULL OR parent_site != '9999'
+      description: parent_site must not equal '9999'
+    - rule_id: CTMS-PRA-SS-UNQ-002
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - study_id
+      - study_site_id
+      - site_number
+      - parent_site
+      description: site_number must be unique per study_id, study_site_id, and parent_site
+    - rule_id: CTMS-PRA-SS-NNL-006
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_site_status
+      description: study_site_status must never be null
+    - rule_id: CTMS-PRA-SS-NNL-007
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: account_id
+      description: account_id must never be null
+    - rule_id: CTMS-PRA-SS-NNL-008
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site_type
+      description: site_type must never be null
+- vendor: PRA
+  entity: study_site_monitor
+  scd_business_keys:
+  - study_id
+  - study_site_id
+  - visit_id
+  canonical_cols:
+  - study_id
+  - study_site_id
+  - visit_id
+  - cra_contact_id
+  - visit_type
+  - visit_method
+  - visit_status
+  - planned_visit_start_date
+  - visit_start_date
+  - visit_stop_date
+  - trip_report_status
+  - trip_report_planned_apprv_date
+  - trip_report_approved_date
+  - trip_report_final_submit_date
+  - days_since_last_visit
+  - total_dos
+  - co_mon_visit_flag
+  - initial_report_submission_date
+  - flu_sent_date
+  - confirm_sent_date
+  - hash_key
+  column_types:
+    study_id: string
+    study_site_id: string
+    visit_id: string
+    cra_contact_id: string
+    visit_type: string
+    visit_method: string
+    visit_status: string
+    planned_visit_start_date: date
+    visit_start_date: date
+    visit_stop_date: date
+    trip_report_status: string
+    trip_report_planned_apprv_date: date
+    trip_report_approved_date: date
+    trip_report_final_submit_date: date
+    days_since_last_visit: string
+    total_dos: string
+    co_mon_visit_flag: string
+    initial_report_submission_date: date
+    flu_sent_date: date
+    confirm_sent_date: date
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - study_site_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id,
+    cast(study_site_id as string) as study_site_id,
+    cast(visit_id as string) as visit_id,
+    cast(cra_contact_id as string) as cra_contact_id,
+    cast(visit_type as string) as visit_type,
+    cast(visit_method as string) as visit_method,
+    cast(visit_status as string) as visit_status,
+    cast(planned_visit_start_date as string) as planned_visit_start_date,
+    cast(visit_start_date as string) as visit_start_date,
+    cast(visit_stop_date as string) as visit_stop_date,
+    cast(trip_report_status as string) as trip_report_status,
+    cast(trip_report_planned_apprv_date as string) as trip_report_planned_apprv_date,
+    cast(trip_report_approved_date as string) as trip_report_approved_date,
+    cast(trip_report_final_submit_date as string) as trip_report_final_submit_date,
+    md5(study_protocol_number || study_site_id || visit_id || coalesce(cra_contact_id,'')) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-SSM-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-SSM-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-SSM-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_site_id
+      description: study_site_id must never be null
+    - rule_id: CTMS-PRA-SSM-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: visit_id
+      description: visit_id must never be null
+    - rule_id: CTMS-PRA-SSM-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - study_id
+      - study_site_id
+      - visit_id
+      description: visit_id must be unique per study_id and study_site_id
+- vendor: PRA
+  entity: study_subject
+  scd_business_keys:
+  - study_id
+  - study_site_id
+  - subject_id
+  - subject_number
+  canonical_cols:
+  - study_id
+  - study_site_id
+  - subject_id
+  - subject_number
+  - participant_number
+  - randomization_id
+  - enrollment_id
+  - subject_status
+  - subject_status_reason
+  - hash_key
+  column_types:
+    study_id: string
+    study_site_id: string
+    subject_id: string
+    subject_number: string
+    participant_number: string
+    randomization_id: string
+    enrollment_id: string
+    subject_status: string
+    subject_status_reason: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - subject_id
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject_id
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: subject_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: subject_status_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id,
+    cast(study_site_id as string) as study_site_id,
+    cast(subject_id as string) as subject_id,
+    right(cast(subject_number as string), 4) as participant_number,
+    md5(study_protocol_number || coalesce(study_site_id,'') || coalesce(subject_id,'') || coalesce(subject_status,'')) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-SSU-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-SSU-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-SSU-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_site_id
+      description: study_site_id must never be null
+    - rule_id: CTMS-PRA-SSU-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: subject_id
+      description: subject_id must never be null
+    - rule_id: CTMS-PRA-SSU-UNQ-001
+      check: compound_unique
+      severity: HIGH
+      mode: quarantine
+      field:
+      - subject_id
+      - study_id
+      - study_site_id
+      description: subject_id must be unique per study_id and study_site_id
+- vendor: PRA
+  entity: study_submission
+  scd_business_keys:
+  - study_id
+  - study_country_id
+  - study_site_id
+  - submission_id
+  canonical_cols:
+  - study_id
+  - study_country_id
+  - study_site_id
+  - submission_id
+  - submission_type
+  - submission_level
+  - submission_description
+  - submission_status
+  - recipient_type
+  - target_submission_date
+  - actual_submission_date
+  - target_approval_date
+  - actual_approval_date
+  - planned_submission_date
+  - planned_approval_date
+  - renewal_report_due_date
+  - renewal_report_complete_date
+  - comments
+  - hash_key
+  column_types:
+    study_id: string
+    study_country_id: string
+    study_site_id: string
+    submission_id: string
+    submission_type: string
+    submission_level: string
+    submission_description: string
+    submission_status: string
+    recipient_type: string
+    target_submission_date: date
+    actual_submission_date: date
+    target_approval_date: date
+    actual_approval_date: date
+    planned_submission_date: date
+    planned_approval_date: date
+    renewal_report_due_date: date
+    renewal_report_complete_date: date
+    comments: string
+    hash_key: string
+  zorder_cols:
+  - study_id
+  - submission_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    cast(study_protocol_number as string) as study_id,
+    cast(study_country_id as string) as study_country_id,
+    cast(study_site_id as string) as study_site_id,
+    cast(submission_id as string) as submission_id,
+    cast(submission_type as string) as submission_type,
+    cast(submission_level as string) as submission_level,
+    cast(submission_description as string) as submission_description,
+    cast(submission_status as string) as submission_status,
+    cast(recipient_type as string) as recipient_type,
+    cast(target_submission_date as string) as target_submission_date,
+    cast(actual_submission_date as string) as actual_submission_date,
+    cast(target_approval_date as string) as target_approval_date,
+    cast(actual_approval_date as string) as actual_approval_date,
+    md5(study_protocol_number || study_country_id || coalesce(cast(study_site_id as string),'study_site_id') || submission_id) as hash_key
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: CTMS-PRA-SSUB-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: study_id must never be null
+    - rule_id: CTMS-PRA-SSUB-RGX-001
+      check: regex_match
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      expression: ^[A-Z]{2}[0-9]{3}-[0-9]{3}$
+      description: study_id must match the pattern XX999-999
+    - rule_id: CTMS-PRA-SSUB-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_country_id
+      description: study_country_id must never be null
+    - rule_id: CTMS-PRA-SSUB-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - study_id
+      - study_country_id
+      - study_site_id
+      - submission_id
+      description: submission_id must be unique per study_id, study_country_id, and study_site_id
+- vendor: Planisware
+  entity: milestones
+  scd_business_keys:
+  - protocol_number
+  - activity_type_actual
+  - study_phase_norm
+  - project
+  - line_identifier
+  canonical_cols:
+  - project
+  - project_type
+  - is_public_version
+  - line_identifier
+  - name
+  - activity_type
+  - activity_type_actual
+  - protocol_number
+  - study_phase_norm
+  - cohort
+  - planned_finish
+  - approved_baseline
+  - actual_finish
+  - original_baseline
+  - last_modified_date
+  - load_date
+  - is_required
+  - protocol_number_sk
+  - protocol_no_study_phase_sk
+  - protocol_activity_type_actual_sk
+  - status
+  column_types:
+    project: string
+    project_type: string
+    is_public_version: string
+    line_identifier: string
+    name: string
+    activity_type: string
+    activity_type_actual: string
+    protocol_number: string
+    study_phase_norm: string
+    cohort: string
+    planned_finish: string
+    approved_baseline: string
+    actual_finish: string
+    original_baseline: string
+    last_modified_date: date
+    load_date: date
+    is_required: string
+    protocol_number_sk: string
+    protocol_no_study_phase_sk: string
+    protocol_activity_type_actual_sk: string
+    status: string
+  zorder_cols:
+  - protocol_number
+  - activity_type_actual
+  - study_phase_norm
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: "case when split(activity_type, '-')[0] = 'LPLV'  then 'CCO' \n    else split(activity_type, '-')[0]\
+    \ \nend as activity_type_actual,\nmd5(concat_ws('|', split(activity_type, '-')[0], protocol_number ) ) as protocol_activity_type_actual_sk,\n\
+    case when lower(protocol_number) rlike '(exp|esc)$' then regexp_extract(protocol_number, '^(.*?)(exp|esc)$', 1)\n    else\
+    \ protocol_number\nend as protocol_number,\ncase when lower(protocol_number) like '%exp' then 'Expansion'\n    when lower(protocol_number)\
+    \ like '%esc' then 'Escalation' else 'empty'\nend as study_phase_norm,\ncast(cohort as string) as cohort,\ndate_format(\
+    \  coalesce( to_date(planned_finish, 'yyyy-MM-dd'),\n    to_date(planned_finish, 'MM/dd/yyyy'),\n    to_date(planned_finish,\
+    \ 'MM/dd/yy')\n  ),  'yyyy/MM/dd') as planned_finish,\ncast(approved_baseline as string) as approved_baseline,\ndate_format(\
+    \ coalesce( to_date(actual_finish, 'yyyy-MM-dd'),\n    to_date(actual_finish, 'MM/dd/yyyy'),\n    to_date(actual_finish,\
+    \ 'MM/dd/yy')\n  ),  'yyyy/MM/dd') as actual_finish,\ncast(original_baseline as string) as original_baseline,\ncast(send_to_onepager_5_koios\
+    \ as string) as is_required,\ncast(`_ingestion_timestamp` as date) as load_date,\n`_arrival_time` as last_modified_date\n"
+  cross_entity_sql: "WITH planisware_meta AS (\nSELECT MAX(last_modified_date) AS last_modified_date,\n    MAX(load_date)\
+    \ AS load_date\nFROM {staging_table}),\nactual_counts AS (\n    SELECT protocol_number,\n        study_phase_norm,\n \
+    \       activity_type_actual,\n        COUNT(*) AS actual_count\n    FROM {staging_table}\n    WHERE protocol_number rlike\
+    \ '^X[A-Z][0-9]{3}-[0-9]{3}$'\n      AND protocol_number NOT IN (SELECT DISTINCT protocol_number FROM {common:planisware_exs_ref}\n\
+    \          WHERE state = 'blocked')\n    GROUP BY protocol_number, study_phase_norm, activity_type_actual\n),\nreference_activities\
+    \ AS (\n  SELECT protocol_number,\n      study_phase,\n      milestones,\n      expected_count\n  FROM {common:planisware_exs_ref}\n\
+    \    WHERE protocol_number NOT IN (SELECT DISTINCT protocol_number FROM {common:planisware_exs_ref}\n    WHERE state =\
+    \ 'blocked')\n),\nactivity_statuses AS (\n  SELECT COALESCE(ac.protocol_number, ra.protocol_number) AS protocol_number,\n\
+    \    COALESCE(ac.study_phase_norm, ra.study_phase) AS study_phase_norm,\n    COALESCE(ac.activity_type_actual, ra.milestones)\
+    \ AS activity_type_actual,\n    ac.actual_count,\n    ra.expected_count,\n    CASE WHEN ac.protocol_number IS NULL THEN\
+    \ 'missing'\n        WHEN ra.protocol_number IS NULL THEN 'new'\n        WHEN ac.actual_count > ra.expected_count THEN\
+    \ 'duplicate'\n        WHEN ac.actual_count = ra.expected_count THEN 'ok'\n    END AS status\n  FROM actual_counts ac\n\
+    \    FULL OUTER JOIN reference_activities ra\n    ON ac.protocol_number = ra.protocol_number\n    AND ac.study_phase_norm\
+    \ = ra.study_phase\n    AND ac.activity_type_actual = ra.milestones\n  WHERE ac.protocol_number IS NULL OR ra.protocol_number\
+    \ IS NULL OR ac.actual_count >= ra.expected_count\n)      \n(SELECT\n    pd.project,\n    pd.project_type,\n    pd.is_public_version,\n\
+    \    pd.line_identifier,\n    pd.name,\n    pd.activity_type,\n    pd.activity_type_actual,\n    pd.protocol_number,\n\
+    \    pd.study_phase_norm,\n    pd.cohort,\n    pd.planned_finish,\n    pd.approved_baseline,\n    pd.actual_finish,\n\
+    \    pd.original_baseline,\n    pd.last_modified_date,\n    pd.load_date,\n    pd.is_required,\n    md5(pd.protocol_number)\
+    \ as protocol_number_sk,\n    md5(concat_ws('|',pd.protocol_number,pd.study_phase_norm)) as protocol_no_study_phase_sk,\n\
+    \    pd.protocol_activity_type_actual_sk,\n    rp.status\nFROM {staging_table} pd\nJOIN activity_statuses rp\n    ON pd.protocol_number\
+    \ = rp.protocol_number\n  AND pd.study_phase_norm = rp.study_phase_norm\n  AND pd.activity_type_actual = rp.activity_type_actual\n\
+    \  WHERE rp.status IN ('new', 'duplicate', 'missing', 'ok')\n  order by pd.protocol_number)\nUNION ALL\nSELECT\n  NULL\
+    \ AS project,\n  NULL AS project_type,\n  NULL AS is_public_version,\n  NULL AS line_identifier,\n  NULL AS name,\n  NULL\
+    \ AS activity_type,\n  activity_type_actual,\n  protocol_number,\n  study_phase_norm,\n  NULL AS cohort,\n  NULL AS planned_finish,\n\
+    \  NULL AS approved_baseline,\n  NULL AS actual_finish,\n  NULL AS original_baseline,\n  pm.last_modified_date,\n  pm.load_date,\n\
+    \  NULL AS is_required,\n  NULL AS protocol_number_sk,\n  NULL AS protocol_no_study_phase_sk,\n  NULL AS protocol_activity_type_actual_sk,\n\
+    \  status\nFROM activity_statuses\nCROSS JOIN planisware_meta pm\nwhere status = 'missing'\nUNION ALL\nSELECT\n    NULL\
+    \ AS project,\n    NULL AS project_type,\n    NULL AS is_public_version,\n    NULL AS line_identifier,\n    NULL AS name,\n\
+    \    NULL AS activity_type,\n    milestones AS activity_type_actual,\n    protocol_number,\n    study_phase AS study_phase_norm,\n\
+    \    NULL AS cohort,\n    planned_date AS planned_finish,\n    NULL AS approved_baseline,\n    actual_date AS actual_finish,\n\
+    \    NULL AS original_baseline,\n    pm.last_modified_date,\n    pm.load_date,\n    NULL AS is_required,\n    md5(protocol_number)\
+    \ AS protocol_number_sk,\n    NULL AS protocol_no_study_phase_sk,\n    NULL AS protocol_activity_type_actual_sk,\n   \
+    \ 'ok' AS status\nFROM {common:planisware_exs_ref}\nCROSS JOIN planisware_meta pm\nWHERE state = 'blocked'\n"
+  validation_rules:
+    rules:
+    - rule_id: IPP-PLW-PM-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: protocol_number
+      description: protocol_number must never be null
+    - rule_id: IPP-PLW-PM-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: activity_type_actual
+      description: activity_type_actual must never be null
+    - rule_id: IPP-PLW-PM-XFLD-001
+      check: cross_field
+      severity: MEDIUM
+      mode: flag
+      field: ''
+      expression: actual_finish IS NULL OR actual_finish >= approved_baseline
+      description: actual_finish should be on or after approved_baseline
+- vendor: oracleinform
+  entity: overall_edc_study_metrics
+  scd_business_keys:
+  - study_id
+  - country_name
+  canonical_cols:
+  - overall_edc_id_sk
+  - study_id
+  - country_name
+  - on_treatment
+  - screen_failed_subjects
+  - total_randomized_subjects
+  - in_survival_fu
+  - off_study
+  column_types:
+    overall_edc_id_sk: string
+    study_id: string
+    country_name: string
+    on_treatment: string
+    screen_failed_subjects: string
+    total_randomized_subjects: string
+    in_survival_fu: string
+    off_study: string
+  zorder_cols:
+  - study_id
+  table_sensitivity: INTERNAL
+  pii_columns: []
+  transformation_logic: |
+    {
+      "standard": "- MD5(COALESCE(country,'country') || COALESCE(studyid,'studyid')) AS overall_edc_id_sk,\n- case when upper(country) like '%SUBTOTAL' and UPPER(country) != 'SUBTOTAL' then \n  trim(substring(replace(upper(country), 'UNITED STATES OF AMERICA', 'UNITED STATES'), 1, length(replace(upper(country), 'UNITED STATES OF AMERICA', 'UNITED STATES')) - 9)) end as country_name\n",
+      "post_processing": "filters:\n- condition: \"country_name is not null\"\n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: EDC-MDT-OES-NNL-001
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: study_id
+      description: studyid must never be null
+    - rule_id: EDC-MDT-OES-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: country_name
+      description: country_name must never be null
+    - rule_id: EDC-MDT-OES-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - study_id
+      - country_name
+      description: country_name must be unique per studyid
+- vendor: oracleinform
+  entity: subject_summary
+  scd_business_keys:
+  - subject_number
+  - site
+  - study_id
+  canonical_cols:
+  - country
+  - site
+  - subject_number
+  - participant_number
+  - subject_status
+  - study_phase
+  - date_of_first_icf
+  - enroll_or_screen_fail_date
+  - cohort_desc
+  - cohort
+  - treatment_arm
+  - tumor_type
+  - race
+  - ethnic
+  - dose_level_treatment_arm
+  - most_recent_visit
+  - most_recent_date_of_visit
+  - eotxb_date
+  - death_date
+  - eorfup_date
+  - eos_date
+  - eos_reason
+  - esfu_date
+  - esfu_reason
+  - total_expected_pgs
+  - missing_pgs_entry_not_started
+  - missing_lt30_days
+  - missing_31_60_days
+  - missing_61_90_days
+  - missing_gt90_days
+  - entered_pgs
+  - sv_not_started
+  - sv_not_started_lt30_days
+  - sv_not_started_31_60_days
+  - sv_not_started_61_90_days
+  - sv_not_started_gt90_days
+  - sv_incomplete
+  - sv_complete
+  - open
+  - open_lt30_days
+  - open_31_60_days
+  - open_61_90_days
+  - open_gt90_days
+  - answered_pending_review
+  - lt30_days_after_report_date
+  - days_31_60_after_report_date
+  - days_61_90_after_report_date
+  - days_90_180_after_report_date
+  - study_id
+  column_types:
+    country: string
+    site: string
+    subject_number: string
+    participant_number: string
+    subject_status: string
+    study_phase: string
+    date_of_first_icf: string
+    enroll_or_screen_fail_date: date
+    cohort_desc: string
+    cohort: string
+    treatment_arm: string
+    tumor_type: string
+    race: string
+    ethnic: string
+    dose_level_treatment_arm: string
+    most_recent_visit: string
+    most_recent_date_of_visit: string
+    eotxb_date: date
+    death_date: date
+    eorfup_date: date
+    eos_date: date
+    eos_reason: string
+    esfu_date: date
+    esfu_reason: string
+    total_expected_pgs: string
+    missing_pgs_entry_not_started: string
+    missing_lt30_days: string
+    missing_31_60_days: string
+    missing_61_90_days: string
+    missing_gt90_days: string
+    entered_pgs: string
+    sv_not_started: string
+    sv_not_started_lt30_days: string
+    sv_not_started_31_60_days: string
+    sv_not_started_61_90_days: string
+    sv_not_started_gt90_days: string
+    sv_incomplete: string
+    sv_complete: string
+    open: string
+    open_lt30_days: string
+    open_31_60_days: string
+    open_61_90_days: string
+    open_gt90_days: string
+    answered_pending_review: string
+    lt30_days_after_report_date: date
+    days_31_60_after_report_date: date
+    days_61_90_after_report_date: date
+    days_90_180_after_report_date: date
+    study_id: string
+  zorder_cols:
+  - study_id
+  - site
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: treatment_arm
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: cohort
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: dose_level_treatment_arm
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: race
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: ethnic
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: death_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: eos_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: esfu_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: date_of_first_icf
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: enroll_or_screen_fail_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    - CASE
+      WHEN UPPER(country) = 'UNITED STATES OF AMERICA' THEN 'UNITED STATES'
+      WHEN UPPER(country) = 'CZECHIA'                  THEN 'CZECH REPUBLIC'
+      ELSE UPPER(country)
+      END AS country,
+    - CAST(site AS string) AS site,
+    - CAST(subject_number AS string) AS subject_number,
+    - right(cast(subject_number as string), 4) as participant_number,
+    - CAST(subject_status AS string) AS subject_status,
+    - CAST(date_of_first_icf AS string) AS date_of_first_icf,
+    - CAST(enroll_or_screen_fail_date AS string) AS enroll_or_screen_fail_date,
+    - CAST(treatment_arm AS string) AS treatment_arm,
+    - CAST(most_recent_visit AS string) AS most_recent_visit,
+    - CAST(most_recent_date_of_visit AS string) AS most_recent_date_of_visit,
+    - CAST(death_date AS string) AS death_date,
+    - CAST(eos_date AS string) AS eos_date,
+    - CAST(eos_reason AS string) AS eos_reason,
+    - CAST(total_expected_pgs AS INT) AS total_expected_pgs
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: EDC-MDT-SS-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: subject_number
+      description: subject_number must never be null
+    - rule_id: EDC-MDT-SS-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: subject_status
+      description: subject_status must never be null
+    - rule_id: EDC-MDT-SS-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site
+      description: site must never be null
+    - rule_id: EDC-MDT-SS-NNL-004
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: studyid must never be null
+    - rule_id: EDC-MDT-SS-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - subject_number
+      - site
+      - study_id
+      description: subject_number must be unique per site and studyid
+- vendor: oracleinform
+  entity: subject_summary_by_visit
+  scd_business_keys:
+  - subject_number
+  - site
+  - study_id
+  - visit_name
+  - total_expected_pgs
+  canonical_cols:
+  - country
+  - site
+  - subject_number
+  - participant_number
+  - subject_status
+  - date_of_first_icf
+  - enroll_or_screen_fail_date
+  - protocol_version_randomized
+  - cohort
+  - treatment_arm
+  - most_recent_visit
+  - most_recent_date_of_visit
+  - eotxb_date
+  - nivolumab_eot_date
+  - ipilimumab_eot_date
+  - atezo_eot_date
+  - sunitinib_eot_date
+  - death_date
+  - eorfup_date
+  - eos_date
+  - eos_reason
+  - esfu_date
+  - esfu_reason
+  - visit_name
+  - total_expected_pgs
+  - study_id
+  column_types:
+    country: string
+    site: string
+    subject_number: string
+    participant_number: string
+    subject_status: string
+    date_of_first_icf: string
+    enroll_or_screen_fail_date: date
+    protocol_version_randomized: string
+    cohort: string
+    treatment_arm: string
+    most_recent_visit: string
+    most_recent_date_of_visit: string
+    eotxb_date: date
+    nivolumab_eot_date: date
+    ipilimumab_eot_date: date
+    atezo_eot_date: date
+    sunitinib_eot_date: date
+    death_date: date
+    eorfup_date: date
+    eos_date: date
+    eos_reason: string
+    esfu_date: date
+    esfu_reason: string
+    visit_name: string
+    total_expected_pgs: string
+    study_id: string
+  zorder_cols:
+  - study_id
+  - subject_number
+  table_sensitivity: CONFIDENTIAL
+  pii_columns:
+  - column: subject_number
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: treatment_arm
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: cohort
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: death_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: eos_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: esfu_reason
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: date_of_first_icf
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  - column: enroll_or_screen_fail_date
+    pii_category: PII
+    sensitivity: CONFIDENTIAL
+  transformation_logic: |
+    {
+      "standard": "REPLACE(UPPER(country), 'UNITED STATES OF AMERICA', 'UNITED STATES') AS country,\nCAST(site AS string) AS site,\nCAST(subject_number AS string) AS subject_number,\nright(cast(subject_number as string), 4) as participant_number,\nCAST(subject_status AS string) AS subject_status,\nCAST(date_of_first_icf AS string) AS date_of_first_icf,\nCAST(enroll_or_screen_fail_date AS string) AS enroll_or_screen_fail_date,\nCAST(treatment_arm AS string) AS treatment_arm,\nCAST(most_recent_visit AS string) AS most_recent_visit,\nto_date(`most_recent_date_of_visit`, 'ddMMMyyyy') AS most_recent_date_of_visit,\nCAST(death_date AS string) AS death_date,\nCAST(eos_date AS string) AS eos_date,\nCAST(eos_reason AS string) AS eos_reason,\nCAST(visit_name AS string) AS visit_name\n",
+      "post_processing": "filters:\n  - condition: \"most_recent_date_of_visit IS NOT NULL\"\ndeduplication:\n  keys: [subject_number, site, study_id, visit_name]\n  order_by: \n    - most_recent_date_of_visit \n    - total_expected_pgs DESC\n"
+    }
+  cross_entity_sql: null
+  validation_rules:
+    rules:
+    - rule_id: EDC-MDT-SSV-NNL-001
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: subject_number
+      description: subject_number must never be null
+    - rule_id: EDC-MDT-SSV-NNL-002
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: subject_status
+      description: subject_status must never be null
+    - rule_id: EDC-MDT-SSV-NNL-003
+      check: not_null
+      severity: HIGH
+      mode: quarantine
+      field: site
+      description: site must never be null
+    - rule_id: EDC-MDT-SSV-NNL-004
+      check: not_null
+      severity: CRITICAL
+      mode: quarantine
+      field: study_id
+      description: studyid must never be null
+    - rule_id: EDC-MDT-SSV-UNQ-001
+      check: compound_unique
+      severity: CRITICAL
+      mode: quarantine
+      field:
+      - subject_number
+      - site
+      - study_id
+      - visit_name
+      description: subject_number must be unique per site and studyid

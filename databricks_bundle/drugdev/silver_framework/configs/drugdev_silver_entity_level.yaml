@@ -1,0 +1,863 @@
+domain_name: DrugDev
+data_product_name: DrugDev
+owner_team: clinical_data_engineering
+datasets:
+- dataset_name: 4g_xb002_101_cohort_summary_report
+  source_dataset_name: 4g_xb002_101_cohort_summary_report
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      try_cast(enrollment_cap   as int) as enrollment_cap,
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group
+    cross_entity_sql: null
+- dataset_name: 4g_xb002_101_subject_summary_report
+  source_dataset_name: 4g_xb002_101_subject_summary_report
+  mapping_rules:
+    studysite: study_site
+    cohort_desc: cohort
+    last_visit_date: last_visit_date_[local]
+    next_expected_visit_date: next_expected_visit_date_[local]
+  overrides:
+    transformation_logic: |
+      case when get(split(cohort_desc ,':'),0) like 'Cohort B%' then 'Cohort B'
+          when get(split(cohort_desc ,':'),0) like 'Cohort F%' then 'Cohort F'
+          when get(split(cohort_desc ,':'),0) like 'COHORT H%' then 'Cohort H'
+          else get(split(cohort_desc ,':'),0) end as cohort,
+      get(split(cohort_desc ,':'),1) as treatment_arm,
+      concat('XB002_', upper(xb002_initial_dose_level)) as dose_level_treatment_arm_1,
+      concat('XB002_', upper(xb002_initial_dose_level)) as dose_level_treatment_arm
+    cross_entity_sql: null
+- dataset_name: 4g_xb002_101_subject_visit_summary_report
+  source_dataset_name: 4g_xb002_101_subject_visit_summary_report
+  mapping_rules:
+    studysite: study_site
+    discontinued_rollback_request_approved: disc_rollback_approved
+    screen_failure_rollback_request_approved: sf_rollback_approved
+    scheduled_date: scheduled_date_[local]
+    actual_date: actual_date_[local]
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xb010_101_cohort_summary_report
+  source_dataset_name: 4g_xb010_101_cohort_summary_report
+  mapping_rules:
+    dose_level: dose_level_1
+  overrides:
+    transformation_logic: |
+      try_cast(enrollment_cap   as int) as enrollment_cap,
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group
+    cross_entity_sql: null
+- dataset_name: 4g_xb010_101_subject_summary_report
+  source_dataset_name: 4g_xb010_101_subject_summary_report
+  mapping_rules:
+    studysite: study_site
+  overrides:
+    transformation_logic: |
+      case when cohort in('Not available','Screen Fail') then cohort else cohort end as cohort_desc,
+      case
+        when cohort is null then null
+        when study_phase = 'Expansion' then concat_ws(' ', slice(split(cohort, ' '), 1, 2))
+        else split(cohort, ':')[0]
+      end as cohort,
+      case when cohort in('Not available','Screen Fail') then cohort else get(split(cohort ,':'),1)  end as treatment_arm,
+      case
+              when trim(element_at(split(cohort, ':'), 2)) rlike '^[0-9]'
+                then concat(split(`_study_id`, '-')[0], '_', trim(element_at(split(cohort, ':'), 2)))
+              else trim(element_at(split(cohort, ':'), 2))
+            end as dose_level_treatment_arm
+    cross_entity_sql: null
+- dataset_name: 4g_xb010_101_subject_visit_summary_report
+  source_dataset_name: 4g_xb010_101_subject_visit_summary_report
+  mapping_rules:
+    studysite: study_site
+    discontinued_rollback_request_approved: disc_rollback_approved
+    screen_failure_rollback_request_approved: sf_rollback_approved
+    scheduled_date: expected_dispencing_visit_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xb371_101_cohort_summary_report
+  source_dataset_name: 4g_xb371_101_cohort_summary_report
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      try_cast(enrollment_cap   as int) as enrollment_cap,
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group
+    cross_entity_sql: null
+- dataset_name: 4g_xb371_101_subject_summary_report
+  source_dataset_name: 4g_xb371_101_subject_summary_report
+  mapping_rules:
+    studysite: study_site
+    cohort_desc: cohort
+  overrides:
+    transformation_logic: |
+      get(split(cohort_desc,':'),0) as cohort,
+      get(split(cohort_desc,':'),1) as treatment_arm,
+      case when phase is null then 'Escalation'
+        else phase end as study_phase,
+      'Advanced Solid Tumor' as tumor_type,
+      concat('XB371_', upper(get(split(cohort_desc, ':'),1))) as dose_level_treatment_arm
+    cross_entity_sql: null
+- dataset_name: 4g_xb371_101_subject_visit_summary_report
+  source_dataset_name: 4g_xb371_101_subject_visit_summary_report
+  mapping_rules:
+    studysite: study_site
+    discontinued_rollback_request_approved: disc_rollback_approved
+    screen_failure_rollback_request_approved: sf_rollback_approved
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xb628_101_cohort_summary_report
+  source_dataset_name: 4g_xb628_101_cohort_summary_report
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      try_cast(enrollment_cap   as int) as enrollment_cap,
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group
+    cross_entity_sql: null
+- dataset_name: 4g_xb628_101_subject_summary_report
+  source_dataset_name: 4g_xb628_101_subject_summary_report
+  mapping_rules:
+    studysite: study_site
+    cohort_desc: cohort
+    disc_rollback_approved: discontinue_rollback_approved
+    dose_level_treatment_arm: starting_dose_level
+    date_of_discontinuation: discontinuation_date
+  overrides:
+    transformation_logic: "get(split(cohort_desc ,':'),0)  as cohort,\nget(split(cohort_desc ,':'),1)  as treatment_arm,\n\
+      case when stage = 'Escalation Stage' then 'Escalation' \n  else stage\n  end as study_phase, case \n    when stage is\
+      \ not null then 'Advanced Solid Tumor' \n    else null \nend as tumor_type,\ncase\n  when lower(trim(cohort_desc)) rlike\
+      \ '^esc\\\\s*combination\\\\b' then\n    regexp_replace(\n      trim(regexp_extract(cohort_desc, '(?i)^\\\\s*esc\\\\\
+      s*combination\\\\s*(.+)$', 1)),\n      '\\\\s*\\\\+\\\\s*',\n      '+'\n    )\n  when lower(trim(cohort_desc)) rlike\
+      \ '^cohort\\\\s*\\\\w+\\\\s*[:;\\\\-]' then\n    trim(regexp_extract(cohort_desc, '(?i)^\\\\s*cohort\\\\s*\\\\w+\\\\\
+      s*[:;\\\\-]\\\\s*(.+)$', 1))\n  else null\nend as dose_level_treatment_arm\n"
+    cross_entity_sql: null
+- dataset_name: 4g_xb628_101_subject_visit_summary_report
+  source_dataset_name: 4g_xb628_101_subject_visit_summary_report
+  mapping_rules:
+    studysite: study_site
+    discontinued_rollback_request_approved: discontinued_rollback_approved
+    screen_failure_rollback_request_approved: sf_rollback_approved
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_001_cohort_summary_report
+  source_dataset_name: 4g_xl092_001_cohort_summary_report
+  mapping_rules:
+    cohort: cohort_code
+  overrides:
+    transformation_logic: |
+      regexp_extract(cohort_description, '\\((.*?)\\)', 1) as cohort_group,
+      try_cast(enrollment_cap   as int) as enrollment_cap
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_001_subject_summary_report
+  source_dataset_name: 4g_xl092_001_subject_summary_report
+  mapping_rules:
+    cohort_desc: cohort
+  overrides:
+    transformation_logic: |
+      regexp_extract(cohort_desc, '^(Cohort\\s+\\S+)', 1) AS cohort,
+      regexp_replace(cohort_desc, '^Cohort\\s+\\S+[\\s-]*', '') AS treatment_arm,
+      regexp_replace(cohort_desc, '^Cohort\\s+\\S+[\\s-]*', '') AS dose_level_treatment_arm
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_002_cohort_summary_report
+  source_dataset_name: 4g_xl092_002_cohort_summary_report
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group, case when cohort in('12_A1','12_A2','13_A1', '13_A2') then '80'
+      else enrollment_cap end as enrollment_cap
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_002_subject_summary_report
+  source_dataset_name: 4g_xl092_002_subject_summary_report
+  mapping_rules:
+    cohort_desc: cohort
+    last_visit_date: last_visit_date_[local]
+    next_expected_visit_date: next_expected_visit_date_[local]
+  overrides:
+    transformation_logic: "case when last_visit_date is null or last_visit_date = '' then concat(get(split(cohort_desc, ':'),\
+      \ 0), ' ', get(split(cohort_desc, ' '), 1)) \n    when NOT regexp_like(lower(last_visit_date), '^[0-9]{1,2}-[a-z]{3}-[0-9]{2}$')\
+      \ then concat(get(split(cohort_desc, ' '), 0), ' ', get(split(cohort_desc, ' '), 1))\n    when TO_DATE(last_visit_date,\
+      \ 'dd-MMM-yy') < TO_DATE('08-Feb-24', 'dd-MMM-yy') and tumor_type = 'ccRCC 1L' and cohort_desc is null then 'Cohort\
+      \ 1'\n    when TO_DATE(last_visit_date, 'dd-MMM-yy') >= TO_DATE('08-Feb-24', 'dd-MMM-yy') and tumor_type = 'ccRCC 1L'\
+      \ and cohort_desc is null then 'Cohort 13'\n  else concat(get(split(cohort_desc, ':'), 0), ' ', get(split(cohort_desc,\
+      \ ' '), 1)) end as cohort,\nregexp_replace(cohort_desc, '^Cohort\\\\s+\\\\d+\\\\s+', '') as treatment_arm,\nconcat('XL092_',\
+      \ upper(xl092_initial_dose_level)) as dose_level_treatment_arm_1,\nconcat('XL092_', upper(xl092_initial_dose_level))\
+      \ as dose_level_treatment_arm\n"
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_002_subject_visit_summary_report
+  source_dataset_name: 4g_xl092_002_subject_visit_summary_report
+  mapping_rules:
+    discontinued_rollback_request_approved: disc_rollback_approved
+    screen_failure_rollback_request_approved: sf_rollback_approved
+    scheduled_date: scheduled_date_[local]
+    actual_date: actual_date_[local]
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_201_subject_summary_report
+  source_dataset_name: 4g_xl092_201_subject_summary_report
+  mapping_rules:
+    studysite: study_site
+    investigator: investigator_name
+    subject: participant_id
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_201_subject_visit_summary_report
+  source_dataset_name: 4g_xl092_201_subject_visit_summary_report
+  mapping_rules:
+    studysite: study_site
+    investigator: investigator_name
+    subject: participant_id
+    actual_date: visit_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_303_cohort_summary_report
+  source_dataset_name: 4g_xl092_303_cohort_summary_report
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      try_cast(enrollment_cap   as int) as enrollment_cap,
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_303_subject_summary_report
+  source_dataset_name: 4g_xl092_303_subject_summary_report
+  mapping_rules:
+    liver_metastasis: presence_of_liver_metastasis
+    last_visit_date: last_visit_date_[local]
+    next_expected_visit_date: next_expected_visit_date_[local]
+  overrides:
+    transformation_logic: |
+      case when `liver_metastasis` = 'Yes' then 'Liver Metastasis'
+          when `liver_metastasis` = 'No'  then 'Non-Liver Metastasis'
+          else `liver_metastasis` end as cohort_desc,
+      case when `liver_metastasis` = 'Yes' then 'Liver Metastasis'
+          when `liver_metastasis` = 'No'  then 'Non-Liver Metastasis'
+          else `liver_metastasis` end as cohort
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_303_subject_visit_summary_report
+  source_dataset_name: 4g_xl092_303_subject_visit_summary_report
+  mapping_rules:
+    discontinued_rollback_request_approved: disc_rollback_approved
+    screen_failure_rollback_request_approved: sf_rollback_approved
+    scheduled_date: scheduled_date_[local]
+    actual_date: actual_date_[local]
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_304_cohort_summary_report
+  source_dataset_name: 4g_xl092_304_cohort_summary_report
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      try_cast(enrollment_cap   as int) as enrollment_cap,
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_304_subject_summary_report
+  source_dataset_name: 4g_xl092_304_subject_summary_report
+  mapping_rules:
+    studysite: study_site
+    last_visit_date: last_visit_date_[local]
+    next_expected_visit_date: next_expected_visit_date_[local]
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_304_subject_visit_summary_report
+  source_dataset_name: 4g_xl092_304_subject_visit_summary_report
+  mapping_rules:
+    studysite: study_site
+    discontinued_rollback_request_approved: disc_rollback_approved
+    screen_failure_rollback_request_approved: sf_rollback_approved
+    scheduled_date: scheduled_date_[local]
+    actual_date: actual_date_[local]
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_311_cohort_summary_report
+  source_dataset_name: 4g_xl092_311_cohort_summary_report
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      try_cast(enrollment_cap   as int) as enrollment_cap,
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_311_subject_summary_report
+  source_dataset_name: 4g_xl092_311_subject_summary_report
+  mapping_rules:
+    studysite: study_site
+    cohort_desc: tumor_grade
+    cohort: tumor_site
+  overrides:
+    transformation_logic: |
+      cast(cohort as string) as tumor_type
+    cross_entity_sql: null
+- dataset_name: 4g_xl092_311_subject_visit_summary_report
+  source_dataset_name: 4g_xl092_311_subject_visit_summary_report
+  mapping_rules:
+    studysite: study_site
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl102_101_subject_visit_summary_report
+  source_dataset_name: 4g_xl102_101_subject_visit_summary_report
+  mapping_rules:
+    actual_date: actual_date_[local]
+    scheduled_date: scheduled_date_[local]
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl114_101_subject_visit_summary_report
+  source_dataset_name: 4g_xl114_101_subject_visit_summary_report
+  mapping_rules:
+    actual_date: actual_date_[local]
+    scheduled_date: scheduled_date_[local]
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl184_315_cohort_summary_report
+  source_dataset_name: 4g_xl184_315_cohort_summary_report
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      try_cast(enrollment_cap   as int) as enrollment_cap,
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group
+    cross_entity_sql: null
+- dataset_name: 4g_xl309_101_cohort_summary_report
+  source_dataset_name: 4g_xl309_101_cohort_summary_report
+  mapping_rules:
+    dose_level: current_dose_level
+  overrides:
+    transformation_logic: |
+      try_cast(enrollment_cap   as int) as enrollment_cap,
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group
+    cross_entity_sql: null
+- dataset_name: 4g_xl309_101_subject_summary_report
+  source_dataset_name: 4g_xl309_101_subject_summary_report
+  mapping_rules:
+    studysite: study_site
+    cohort_desc: cohort
+    study_phase: study_stage
+  overrides:
+    transformation_logic: "get(split(cohort_desc, ':'), 0) as cohort,\ncase when study_phase = 'Escalation Stage' then 'Escalation'\
+      \ \n    else study_phase\n    end as study_phase,\nsplit_part(cohort_desc,':',2) as dose_level_treatment_arm_1,\nsplit_part(cohort_desc,':',2)\
+      \ as dose_level_treatment_arm\n"
+    cross_entity_sql: null
+- dataset_name: 4g_xl309_101_subject_visit_summary_report
+  source_dataset_name: 4g_xl309_101_subject_visit_summary_report
+  mapping_rules:
+    studysite: study_site
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: 4g_xl495_101_cohort_summary_report
+  source_dataset_name: 4g_xl495_101_cohort_summary_report
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      try_cast(enrollment_cap   as int) as enrollment_cap,
+      case when cohort_group = 'Single-Agent' then 'SOLID TUMORS'
+          else cohort_group end as cohort_group
+    cross_entity_sql: null
+- dataset_name: 4g_xl495_101_subject_summary_report
+  source_dataset_name: 4g_xl495_101_subject_summary_report
+  mapping_rules:
+    studysite: study_site
+    cohort_desc: cohort
+  overrides:
+    transformation_logic: |
+      get(split(cohort_desc,':'),1) as cohort,
+      regexp_replace(cohort_desc, '^\\S+\\s+', '') as treatment_arm,
+      'Escalation' as study_phase,
+      'SOLID TUMORS' as tumor_type,
+      regexp_replace(cohort_desc, '^\\S+\\s+', '') as dose_level_treatment_arm
+    cross_entity_sql: null
+- dataset_name: 4g_xl495_101_subject_visit_summary_report
+  source_dataset_name: 4g_xl495_101_subject_visit_summary_report
+  mapping_rules:
+    studysite: study_site
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: cenduit_xl092_009_subject_summary_report
+  source_dataset_name: cenduit_xl092_009_subject_summary_report
+  mapping_rules: {}
+  overrides:
+    transformation_logic: "try_cast(case when site_number ='2124' then '1841'\n  else site_number \n  end as  string) as studysite,\n\
+      cast(enrolled_cohort as string) as cohort_desc,\nTrim(split_part(enrolled_cohort,'-',1)) as cohort,\nsplit_part(enrolled_cohort,'-',2)\
+      \ as treatment_arm,\ncase when Trim(split_part(enrolled_cohort,'-',1)) like '%Cohort A%' then 'Advanced Solid Tumors'\n\
+      \  when Trim(split_part(enrolled_cohort,'-',1)) like '%Cohort B%' then '1L RCC'\n  when Trim(split_part(enrolled_cohort,'-',1))\
+      \ like '%Cohort 1%' then '2L+RCC'\n  when Trim(split_part(enrolled_cohort,'-',1)) like '%Cohort 2%' then '1L RCC'\n\
+      \  when Trim(split_part(enrolled_cohort,'-',1)) is null then 'Advanced Solid Tumors'\n  else null\n  end as tumor_type,\n\
+      case when current_zanzalintinib_dose is null then null\n  else concat(current_zanzalintinib_dose,' ','zanzalintinib')\n\
+      \  end as dose_level_treatment_arm_1,\ncase when current_ab521_dose is null then null\n  else concat(current_ab521_dose,'\
+      \ ','ab521')\n  end as dose_level_treatment_arm_2,\ncase when current_zanzalintinib_dose is null and current_ab521_dose\
+      \ is null then null\n  when current_zanzalintinib_dose is null then concat(trim(current_ab521_dose),' ','ab521')\n \
+      \ when current_ab521_dose is null then concat(trim(current_zanzalintinib_dose),' ','zanzalintinib')\n  else CONCAT(concat(trim(current_zanzalintinib_dose),'\
+      \ ','zanzalintinib'), '+', concat(trim(current_ab521_dose),' ','ab521'))\n  end as dose_level_treatment_arm\n"
+    cross_entity_sql: null
+- dataset_name: cenduit_xl092_009_subject_visit_summary_report
+  source_dataset_name: cenduit_xl092_009_subject_visit_summary_report
+  mapping_rules:
+    current_participant_status: subject_status
+  overrides:
+    transformation_logic: |
+      case when "site_number" ='2124' then '1841'
+        else try_cast("site_number" as string)
+        end as studysite
+    cross_entity_sql: null
+- dataset_name: cenduit_xl092_305_subject_summary_report
+  source_dataset_name: cenduit_xl092_305_subject_summary_report
+  mapping_rules:
+    studysite: study_site,
+    investigator: site_investigator
+  overrides:
+    transformation_logic: "case \n  when `zanzalintinib/placebo_current_dose` is null then null\n  else concat(`zanzalintinib/placebo_current_dose`,'\
+      \ ','zanzalintinib')\n  end as dose_level_treatment_arm_1,\ncase \n  when `zanzalintinib/placebo_current_dose` is null\
+      \ then null\n  else concat(`zanzalintinib/placebo_current_dose`,' ','zanzalintinib')\n  end as dose_level_treatment_arm\n"
+    cross_entity_sql: null
+- dataset_name: cenduit_xl092_305_subject_visit_summary_report
+  source_dataset_name: cenduit_xl092_305_subject_visit_summary_report
+  mapping_rules:
+    current_participant_status: subject_status
+  overrides:
+    transformation_logic: |
+      cast(site_number as string) as studysite
+    cross_entity_sql: null
+- dataset_name: iqvia_global_contact
+  source_dataset_name: iqvia_global_contact
+  mapping_rules:
+    title: job_title
+    phone_number: work_phone_number
+    fax_number": work_fax_number
+    cell_number: cell_phone_number
+    email: primary_email_id
+    degree: primary_specialty_category
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: iqvia_xl092_009_address_association
+  source_dataset_name: iqvia_xl092_009_address_association
+  mapping_rules:
+    type: address_type
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: iqvia_xl092_009_study
+  source_dataset_name: iqvia_xl092_009_study
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      'Phase 1' as phase,
+      'Solid Tumors' as therapeutic_area,
+      'Closed' as status,
+      'Open Label' as study_type,
+      cast(null as string) as unblinded,
+      'XL092' as study_drug,
+      md5(clinical_study_source_id||protocol_title||'Phase 1'||'Solid Tumors') as hash_key
+    cross_entity_sql: null
+- dataset_name: iqvia_xl092_009_study_site
+  source_dataset_name: iqvia_xl092_009_study_site
+  mapping_rules:
+    primary_investigator_source_id: pi_contact_id
+    study_site_status: site_status
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: iqvia_xl092_304_address_association
+  source_dataset_name: iqvia_xl092_304_address_association
+  mapping_rules:
+    type: address_type
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: iqvia_xl092_304_study
+  source_dataset_name: iqvia_xl092_304_study
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      'Phase 3' as phase,
+      'Renal Cell Carcinoma' as therapeutic_area,
+      'Active' as status,
+      'Blinded' as study_type,
+      cast(null as string) as unblinded,
+      'XL092' as study_drug,
+      md5(clinical_study_source_id||protocol_title||'Phase 3'||'Renal Cell Carcinoma') as hash_key
+    cross_entity_sql: null
+- dataset_name: iqvia_xl092_304_study_site
+  source_dataset_name: iqvia_xl092_304_study_site
+  mapping_rules:
+    pi_contact_id: primary_investigator_source_id
+    study_site_status: site_status
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: iqvia_xl092_305_address_association
+  source_dataset_name: iqvia_xl092_305_address_association
+  mapping_rules:
+    type: address_type
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: iqvia_xl092_305_study
+  source_dataset_name: iqvia_xl092_305_study
+  mapping_rules: {}
+  overrides:
+    transformation_logic: |
+      'Phase 3' as phase,
+      'Head and Neck Squamous Cell Cancer' as therapeutic_area,
+      'Active' as status,
+      'Blinded' as study_type,
+      cast(null as string) as unblinded,
+      'XL092' as study_drug,
+      md5(clinical_study_source_id||protocol_title||'Phase 3'||'Head and Neck Squamous Cell Cancer') as hash_key
+    cross_entity_sql: null
+- dataset_name: iqvia_xl092_305_study_site
+  source_dataset_name: iqvia_xl092_305_study_site
+  mapping_rules:
+    primary_investigator_source_id: pi_contact_id
+    study_site_status: site_status
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xb002_101_early_phase_subject_status
+  source_dataset_name: medidata_xb002_101_early_phase_subject_status
+  mapping_rules:
+    study_id: project
+    site_name: site
+    participant_status: subjstat
+    participant_type: stage3
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xb002_101_early_phase_subject_visit
+  source_dataset_name: medidata_xb002_101_early_phase_subject_visit
+  mapping_rules:
+    study_id: project
+    site_name: site
+    date_of_visit_scheduled: vddt
+    visit_description: instancename
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xb002_101_missing_pgs
+  source_dataset_name: medidata_xb002_101_missing_pgs
+  mapping_rules:
+    enroll_or_screen_fail_date: enroll_or_screen_fail_date
+    team_comments: comments
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xb002_101_subject_summary
+  source_dataset_name: medidata_xb002_101_subject_summary
+  mapping_rules:
+    cohort_desc: cohort
+    team_comments: comments
+    enroll_or_screen_fail_date: enroll_or_screen_fail_date
+  overrides:
+    transformation_logic: |
+      get(split(cohort_desc,':'),0) as cohort,
+      get(split(cohort_desc,':'),1) as tumor_type
+    cross_entity_sql: null
+- dataset_name: medidata_xb002_101_subject_summary_by_visit
+  source_dataset_name: medidata_xb002_101_subject_summary_by_visit
+  mapping_rules:
+    enroll_or_screen_fail_date: enroll_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xb010_101_missing_pgs
+  source_dataset_name: medidata_xb010_101_missing_pgs
+  mapping_rules:
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+    enrolled_randomized_screen_fail_date: enroll_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xb010_101_overall_edc_study_metrics
+  source_dataset_name: medidata_xb010_101_overall_edc_study_metrics
+  mapping_rules:
+    total_randomized_subjects: total_enrolled_randomized_subjects
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xb010_101_subject_summary
+  source_dataset_name: medidata_xb010_101_subject_summary
+  mapping_rules:
+    cohort_desc: cohort
+    enroll_or_screen_fail_date: enrolled/randomized/_screen_fail_date
+    critical_page_y_n: critical_page_y_n
+  overrides:
+    transformation_logic: |
+      get(split(cohort_desc,':'),0) as cohort,
+      get(split(cohort_desc,':'),1) as tumor_type
+    cross_entity_sql: null
+- dataset_name: medidata_xb010_101_subject_summary_by_visit
+  source_dataset_name: medidata_xb010_101_subject_summary_by_visit
+  mapping_rules:
+    enroll_or_screen_fail_date: enrolled/randomized/_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_002_early_phase_subject_status
+  source_dataset_name: medidata_xl092_002_early_phase_subject_status
+  mapping_rules:
+    study_id: project
+    site_name: site
+    participant_status: subjstat
+    participant_type: stage
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_002_early_phase_subject_visit
+  source_dataset_name: medidata_xl092_002_early_phase_subject_visit
+  mapping_rules:
+    study_id: project
+    site_name: site
+    date_of_visit_scheduled: svdts
+    visit_description: instancename
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_002_missing_pgs
+  source_dataset_name: medidata_xl092_002_missing_pgs
+  mapping_rules:
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_002_query_details
+  source_dataset_name: medidata_xl092_002_query_details
+  mapping_rules:
+    enroll_or_screen_fail_date: enrolled_randomized_or_screen_fail_date_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_002_subject_summary
+  source_dataset_name: medidata_xl092_002_subject_summary
+  mapping_rules:
+    cohort_desc: cohort
+    enroll_or_screen_fail_date: enrolled_randomized_or_screen_fail_date_date
+  overrides:
+    transformation_logic: |
+      get(split(cohort_desc,':'),0) as cohort,
+      get(split(cohort_desc,':'),1) as tumor_type
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_002_subject_summary_by_visit
+  source_dataset_name: medidata_xl092_002_subject_summary_by_visit
+  mapping_rules:
+    enroll_or_screen_fail_date: enrolled_randomized_or_screen_fail_date_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_303_missing_pgs
+  source_dataset_name: medidata_xl092_303_missing_pgs
+  mapping_rules:
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_303_query_details
+  source_dataset_name: medidata_xl092_303_query_details
+  mapping_rules:
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_303_subject_summary
+  source_dataset_name: medidata_xl092_303_subject_summary
+  mapping_rules:
+    enroll_or_screen_fail_date: randomization_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_303_subject_summary_by_visit
+  source_dataset_name: medidata_xl092_303_subject_summary_by_visit
+  mapping_rules:
+    enroll_or_screen_fail_date: randomization_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_304_missing_pgs
+  source_dataset_name: medidata_xl092_304_missing_pgs
+  mapping_rules:
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_304_query_details
+  source_dataset_name: medidata_xl092_304_query_details
+  mapping_rules:
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_304_subject_summary
+  source_dataset_name: medidata_xl092_304_subject_summary
+  mapping_rules:
+    eotxb_date: xl092_eot_date
+    eorfup_date: erfu_date
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_304_subject_summary_by_visit
+  source_dataset_name: medidata_xl092_304_subject_summary_by_visit
+  mapping_rules:
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+    eotxb_date: xl092_eot_date
+    eorfup_date: erfu_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_305_overall_edc_study_metrics
+  source_dataset_name: medidata_xl092_305_overall_edc_study_metrics
+  mapping_rules:
+    enroll_or_screen_fail_date: randomized/|screen_fail_date
+    total_randomized_subjects: total_enrolled_randomized_subjects
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_305_query_details
+  source_dataset_name: medidata_xl092_305_query_details
+  mapping_rules:
+    enroll_or_screen_fail_date: randomized/|screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl092_305_subject_summary
+  source_dataset_name: medidata_xl092_305_subject_summary
+  mapping_rules:
+    enroll_or_screen_fail_date: randomized/_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl102_101_subject_summary
+  source_dataset_name: medidata_xl102_101_subject_summary
+  mapping_rules:
+    enroll_or_screen_fail_date: enroll_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl184_021_subject_summary
+  source_dataset_name: medidata_xl184_021_subject_summary
+  mapping_rules:
+    site: siteoid
+    subject_number: subject_name
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl184_315_subject_summary
+  source_dataset_name: medidata_xl184_315_subject_summary
+  mapping_rules:
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl184_315_subject_summary_by_visit
+  source_dataset_name: medidata_xl184_315_subject_summary_by_visit
+  mapping_rules:
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl495_101_overall_edc_study_metrics
+  source_dataset_name: medidata_xl495_101_overall_edc_study_metrics
+  mapping_rules:
+    total_randomized_subjects: total_enrolled_randomized_subjects
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: medidata_xl495_101_subject_summary
+  source_dataset_name: medidata_xl495_101_subject_summary
+  mapping_rules:
+    cohort_desc: cohort
+    enroll_or_screen_fail_date: enroll/rand|or_screen_fail|date
+  overrides:
+    transformation_logic: |
+      get(split(cohort_desc,':'),0) as cohort,
+      get(split(cohort_desc,':'),1) as tumor_type
+    cross_entity_sql: null
+- dataset_name: oracleinform_xl092_001_subject_summary
+  source_dataset_name: oracleinform_xl092_001_subject_summary
+  mapping_rules:
+    enroll_or_screen_fail_date: enrollment_or_screen_fail_date
+    date_of_first_icf: date_subject_first_signed_informed_consent
+    treatment_arm: treatment_description
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: oracleinform_xl092_001_subject_summary_by_visit
+  source_dataset_name: oracleinform_xl092_001_subject_summary_by_visit
+  mapping_rules:
+    enroll_or_screen_fail_date: enrollment_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: oracleinform_xl184_311_subject_summary
+  source_dataset_name: oracleinform_xl184_311_subject_summary
+  mapping_rules:
+    enroll_or_screen_fail_date: randomization_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: oracleinform_xl184_311_subject_summary_by_visit
+  source_dataset_name: oracleinform_xl184_311_subject_summary_by_visit
+  mapping_rules:
+    visit_name: visit_short_name
+    enroll_or_screen_fail_date: randomization_or_screen_fail_date
+    most_recent_date_of_visit: date_of_visit
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: oracleinform_xl184_312_subject_summary
+  source_dataset_name: oracleinform_xl184_312_subject_summary
+  mapping_rules:
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: oracleinform_xl184_312_subject_summary_by_visit
+  source_dataset_name: oracleinform_xl184_312_subject_summary_by_visit
+  mapping_rules:
+    most_recent_date_of_visit: date_of_visit
+    visit_name: visit_short_name
+    enroll_or_screen_fail_date: rand_or_screen_fail_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: parexel_xl092_201_site_contact_details
+  source_dataset_name: parexel_xl092_201_site_contact_details
+  mapping_rules:
+    site_number: site
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null
+- dataset_name: planisware_global_milestones
+  source_dataset_name: planisware_global_milestones
+  mapping_rules:
+    project_type: project_type
+    is_public_version: is_public_version
+    line_identifier: line_identifier
+    activity_type: activity_type
+    protocol_number: protocol_number
+    planned_finish: planned_finish
+    approved_baseline: approved_baseline
+    actual_finish: actual_finish
+    original_baseline: original_baseline
+    last_modified_date: last_modified_date
+    partition_date: load_date
+  overrides:
+    transformation_logic: null
+    cross_entity_sql: null

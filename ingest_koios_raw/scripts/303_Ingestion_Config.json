@@ -1,0 +1,19 @@
+[
+    {
+        "team_dataset_key": "clinical-4g",
+        "file_study_key": "Subject_Summary_Report_XB002_101-XB002-101",
+        "Key dataset for now?": "Yes",
+        "File Needed?": "Yes",
+        "dataset": "4g",
+        "Delimiter": "Comma",
+        "file_pattern": "Subject Summary Report_XB002-101",
+        "frequency": "Daily",
+        "global_filename": "Subject_Summary_Report_XB002_101",
+        "organization": "exelixis",
+        "schema": "[{\"S\":\"Study_ID\"},{\"S\":\"StudySite\"},{\"S\":\"Investigator\"},{\"S\":\"Country\"},{\"S\":\"Subject\"},{\"S\":\"Cohort\"},{\"S\":\"Study Phase\"},{\"S\":\"Tumor Type\"},{\"S\":\"Status\"},{\"S\":\"Last Scheduled Visit\"},{\"S\":\"Last Visit Date [Local]\"},{\"S\":\"Next Expected Visit\"},{\"S\":\"Next Expected Visit Date [Local]\"}]",
+        "sheet": null,
+        "studyid": "XB002-101",
+        "table_name": "Subject_Summary_Report_XB002_101",
+        "week_day": null
+    }
+]

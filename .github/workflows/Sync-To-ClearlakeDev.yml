@@ -1,0 +1,47 @@
+# This workflow Sync the application code to the clearlake dev MWAA s3
+# It can also be manually run on a selected branch.
+
+name: 'Sync to Clearlakedev'
+
+on: 
+  workflow_dispatch:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: read
+  id-token: write
+  
+jobs:
+  development:
+    name: 'Sync to Clearlakedev'
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
+      - name: Configure AWS creds
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
+        with:
+          role-to-assume: arn:aws:iam::441447966705:role/dev-daplex-drugdevelopment-3dl-github-action-role
+          aws-region: us-west-2
+      - name: Install AWS CLI
+        uses: unfor19/install-aws-cli-action@e8b481e524a99f37fbd39fdc1dcb3341ab091367
+      - name: dt koios dbt to S3
+        run: aws s3 sync ./ingest_koios_raw_dev/dbt/ s3://exelixis-clearlake-airflow-dev-us-west-2-441447966705/drugdevelopment/dags/dbt/drugdevelopment/koios/ --delete
+      - name: dt koios dbt to S3 clearlake
+        run: aws s3 sync ./ingest_koios_raw_dev/dbt/ s3://exelixis-clearlake-airflow-dev-us-west-2-441447966705/drugdevelopment/dags/dbt/drugdevelopment/koios/ --delete
+      - name: dt koios dags to S3
+        run: aws s3 sync ./ingest_koios_raw_dev/dags/ s3://exelixis-clearlake-airflow-dev-us-west-2-441447966705/drugdevelopment/dags/drugdevelopment/koios/ --delete
+      - name: dt koios raw ingest Scripts to S3
+        run: aws s3 sync ./ingest_koios_raw_dev/scripts/ s3://exelixis-clearlake-airflow-dev-us-west-2-441447966705/drugdevelopment/dags/scripts/drugdevelopment/ingest_koios_raw_dev/ --delete
+      - name: dt koios raw ingest dags to S3
+        run: aws s3 sync ./ingest_koios_raw_dev/dags/ s3://exelixis-clearlake-airflow-dev-us-west-2-441447966705/drugdevelopment/dags/drugdevelopment/ingest_koios_raw_dev/ --delete
+      - name: dt koios raw ingest Scripts to S3 mwaa
+        run: aws s3 sync ./ingest_koios_raw_dev/scripts/ s3://exelixis-clearlake-airflow-dev-us-west-2-441447966705/drugdevelopment/dags/scripts/drugdevelopment/ingest_koios_raw_dev/ --delete
+      - name: dt ingest_koios_manual Scripts to S3
+        run: aws s3 sync ./ingest_koios_manual_dev/scripts/ s3://exelixis-clearlake-airflow-dev-us-west-2-441447966705/drugdevelopment/dags/scripts/drugdevelopment/ingest_koios_manual_dev/ --delete
+      - name: dt ingest_koios_manual dags to S3
+        run: aws s3 sync ./ingest_koios_manual_dev/dags/ s3://exelixis-clearlake-airflow-dev-us-west-2-441447966705/drugdevelopment/dags/drugdevelopment/ingest_koios_manual_dev/ --delete
+      - name: dt ingest_koios_manual Scripts to S3 mwaa
+        run: aws s3 sync ./ingest_koios_manual_dev/scripts/ s3://exelixis-clearlake-airflow-dev-us-west-2-441447966705/drugdevelopment/dags/scripts/drugdevelopment/ingest_koios_manual_dev/ --delete

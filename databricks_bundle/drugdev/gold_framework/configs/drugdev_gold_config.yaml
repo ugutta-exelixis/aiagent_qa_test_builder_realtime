@@ -1,0 +1,586 @@
+objects:
+- name: dim_calendar
+  class_path: models.dim_calendar.DimCalendarModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 10
+  dependencies: []
+  is_enabled: true
+  tags:
+    source: computed
+    mart: dim_calendar
+    domain: drugdev
+- name: dim_study
+  class_path: models.dim_study.DimStudyModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 20
+  dependencies: []
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: dim_study
+- name: dim_study_country
+  class_path: models.dim_study_country.DimStudyCountryModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 30
+  dependencies: []
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: dim_study_country
+- name: dim_study_account
+  class_path: models.dim_study_account.DimStudyAccountModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 40
+  dependencies: []
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: dim_study_account
+- name: dim_study_address
+  class_path: models.dim_study_address.DimStudyAddressModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 41
+  dependencies: []
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: dim_study_address
+- name: dim_study_contact
+  class_path: models.dim_study_contact.DimStudyContactModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 42
+  dependencies: []
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: dim_study_contact
+    column_tags:
+      first_name:
+        sensitivity: CONFIDENTIAL
+        pii_category: DEMOGRAPHIC
+      last_name:
+        sensitivity: CONFIDENTIAL
+        pii_category: DEMOGRAPHIC
+      mid_name:
+        sensitivity: CONFIDENTIAL
+        pii_category: DEMOGRAPHIC
+      full_name:
+        sensitivity: CONFIDENTIAL
+        pii_category: DEMOGRAPHIC
+      email:
+        sensitivity: CONFIDENTIAL
+        pii_category: CONTACT
+      email_2:
+        sensitivity: CONFIDENTIAL
+        pii_category: CONTACT
+      email_3:
+        sensitivity: CONFIDENTIAL
+        pii_category: CONTACT
+      phone_number:
+        sensitivity: CONFIDENTIAL
+        pii_category: CONTACT
+      cell_number:
+        sensitivity: CONFIDENTIAL
+        pii_category: CONTACT
+      home_number:
+        sensitivity: CONFIDENTIAL
+        pii_category: CONTACT
+      alt_phone_number:
+        sensitivity: CONFIDENTIAL
+        pii_category: CONTACT
+      fax_number:
+        sensitivity: CONFIDENTIAL
+        pii_category: CONTACT
+      pager_number:
+        sensitivity: CONFIDENTIAL
+        pii_category: CONTACT
+      pager_pin:
+        sensitivity: CONFIDENTIAL
+        pii_category: CONTACT
+- name: dim_study_site
+  class_path: models.dim_study_site.DimStudySiteModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 43
+  dependencies: []
+  is_enabled: true
+  tags:
+    mart: dim_study_site
+    domain: drugdev
+- name: dim_missing_pages
+  class_path: models.dim_missing_pages.DimMissingPagesModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 44
+  dependencies: []
+  is_enabled: true
+  tags:
+    mart: dim_missing_pages
+    domain: drugdev
+- name: dim_site_address
+  class_path: models.dim_site_address.DimSiteAddressModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 45
+  dependencies: []
+  is_enabled: true
+  tags:
+    mart: dim_site_address
+    domain: drugdev
+- name: dim_queries
+  class_path: models.dim_queries.DimQueriesModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 50
+  dependencies: []
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: dim_queries
+- name: dim_cohort_summary
+  class_path: models.dim_cohort_summary.DimCohortSummaryModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 55
+  dependencies: []
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: dim_cohort_summary
+- name: dim_qc_report
+  class_path: models.dim_qc_report.DimQcReportModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 61
+  dependencies: []
+  is_enabled: true
+  tags:
+    mart: dim_qc_report
+    domain: drugdev
+- name: dim_planisware_milestones
+  class_path: models.dim_planisware_milestones.DimPlaniswareMilestonesModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 60
+  dependencies: []
+  is_enabled: true
+  tags:
+    mart: dim_planisware_milestones
+    fallback: first_run_without_history
+    domain: drugdev
+- name: dim_participant
+  class_path: models.dim_participant.DimParticipantModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 100
+  dependencies: []
+  is_enabled: true
+  tags:
+    mart: dim_participant
+    domain: drugdev
+    column_tags:
+      participant_id:
+        sensitivity: CONFIDENTIAL
+        pii_category: SUBJECT_IDENTIFIER
+      participant_number:
+        sensitivity: CONFIDENTIAL
+        pii_category: SUBJECT_IDENTIFIER
+      subject_number:
+        sensitivity: CONFIDENTIAL
+        pii_category: SUBJECT_IDENTIFIER
+- name: dim_cc_report
+  class_path: models.dim_cc_report.DimCcReportModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 120
+  dependencies:
+  - dim_planisware_milestones
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: dim_cc_report
+- name: fct_study_milestone
+  class_path: models.fct_study_milestone.FctStudyMilestoneModel
+  type: FACT
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 210
+  dependencies: []
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: fct_study_milestone
+- name: fct_participant_milestone
+  class_path: models.fct_participant_milestone.FctParticipantMilestoneModel
+  type: FACT
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 212
+  dependencies: []
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: fct_participant_milestone
+- name: fct_site_milestone
+  class_path: models.fct_site_milestone.FctSiteMilestoneModel
+  type: FACT
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 214
+  dependencies: []
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: fct_site_milestone
+- name: fct_queries
+  class_path: models.fct_queries.FctQueriesModel
+  type: FACT
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 216
+  dependencies:
+  - dim_queries
+  is_enabled: true
+  tags:
+    mart: fct_queries
+    domain: drugdev
+- name: fct_study_site
+  class_path: models.fct_study_site.FctStudySiteModel
+  type: FACT
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 217
+  dependencies: []
+  is_enabled: true
+  tags:
+    mart: fct_study_site
+    domain: drugdev
+- name: fct_cohort_details
+  class_path: models.fct_cohort_details.FctCohortDetailsModel
+  type: FACT
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 218
+  dependencies:
+  - dim_participant
+  - dim_cohort_summary
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: fct_cohort_details
+- name: fct_participant_visit
+  class_path: models.fct_participant_visit.FctParticipantVisitModel
+  type: FACT
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 250
+  dependencies:
+  - dim_study_site
+  - dim_study_country
+  is_enabled: true
+  tags:
+    mart: fct_participant_visit
+    domain: drugdev
+    column_tags:
+      participant_id:
+        sensitivity: CONFIDENTIAL
+        pii_category: SUBJECT_IDENTIFIER
+      participant_number:
+        sensitivity: CONFIDENTIAL
+        pii_category: SUBJECT_IDENTIFIER
+      subject_number:
+        sensitivity: CONFIDENTIAL
+        pii_category: SUBJECT_IDENTIFIER
+- name: fct_study_country
+  class_path: models.fct_study_country.FctStudyCountryModel
+  type: FACT
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 260
+  dependencies: []
+  is_enabled: true
+  tags:
+    mart: fct_study_country
+    domain: drugdev
+- name: vw_participant_milestone
+  class_path: models.vw_participant_milestone.VwParticipantMilestoneModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 400
+  dependencies:
+  - fct_participant_milestone
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: vw_participant_milestone
+- name: vw_site_milestone
+  class_path: models.vw_site_milestone.VwSiteMilestoneModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 410
+  dependencies:
+  - fct_site_milestone
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: vw_site_milestone
+- name: vw_study_milestone
+  class_path: models.vw_study_milestone.VwStudyMilestoneModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 420
+  dependencies:
+  - fct_study_milestone
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: vw_study_milestone
+- name: gold_v_cohort_enrollment_trend
+  class_path: models.gold_v_cohort_enrollment_trend.GoldVCohortEnrollmentTrendModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 500
+  dependencies:
+  - fct_participant_visit
+  - dim_participant
+  - dim_calendar
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: gold_v_cohort_enrollment_trend
+- name: gold_v_cohort_summary
+  class_path: models.gold_v_cohort_summary.GoldVCohortSummaryModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 510
+  dependencies:
+  - dim_participant
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: gold_v_cohort_summary
+- name: gold_v_country_dashboard
+  class_path: models.gold_v_country_dashboard.GoldVCountryDashboardModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 520
+  dependencies:
+  - fct_study_site
+  - dim_study_country
+  - vw_site_milestone
+  - fct_participant_visit
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: gold_v_country_dashboard
+- name: gold_v_global_site_activation_trend
+  class_path: models.gold_v_global_site_activation_trend.GoldVGlobalSiteActivationTrendModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 530
+  dependencies:
+  - fct_participant_visit
+  - fct_study_site
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: gold_v_global_site_activation_trend
+- name: gold_v_drill_down_site_info
+  class_path: models.gold_v_drill_down_site_info.GoldVDrillDownSiteInfoModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 540
+  dependencies:
+  - fct_study_site
+  - dim_study_country
+  - vw_site_milestone
+  - dim_site_address
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: gold_v_drill_down_site_info
+- name: gold_v_cohort_summary_dashboard
+  class_path: models.gold_v_cohort_summary_dashboard.GoldVCohortSummaryDashboardModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 515
+  dependencies:
+  - dim_participant
+  - dim_cohort_summary
+  - fct_participant_visit
+  - dim_study_site
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: gold_v_cohort_summary_dashboard
+- name: gold_v_country_dashboard_custom
+  class_path: models.gold_v_country_dashboard_custom.GoldVCountryDashboardCustomModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 525
+  dependencies:
+  - fct_study_site
+  - dim_study_country
+  - fct_site_milestone
+  - fct_participant_visit
+  - dim_participant
+  is_enabled: true
+  tags:
+    domain: drugdev
+    mart: gold_v_country_dashboard_custom
+- name: dim_planisware_daily_hist
+  class_path: models.dim_planisware_daily_hist.DimPlaniswareDailyHistModel
+  type: DIM
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 62
+  dependencies: []
+  is_enabled: true
+  tags:
+    mart: dim_planisware_daily_hist
+    domain: drugdev
+- name: site_info
+  class_path: models.site_info.SiteInfoModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 46
+  dependencies:
+  - dim_site_address
+  - dim_study_site
+  - dim_study_country
+  - fct_site_milestone
+  is_enabled: true
+  tags:
+    mart: site_info
+    domain: drugdev
+- name: enrolled_participants
+  class_path: models.enrolled_participants.EnrolledParticipantsModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 47
+  dependencies:
+  - dim_participant
+  - fct_participant_visit
+  - dim_study_site
+  is_enabled: true
+  tags:
+    mart: enrolled_participants
+    domain: drugdev
+- name: final_monthly_screening_rate
+  class_path: models.final_monthly_screening_rate.FinalMonthlyScreeningRateModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 48
+  dependencies:
+  - dim_planisware_milestones
+  - dim_study
+  - dim_participant
+  - fct_participant_visit
+  - dim_study_site
+  - fct_site_milestone
+  is_enabled: true
+  tags:
+    mart: final_monthly_screening_rate
+    domain: drugdev
+- name: open_queries
+  class_path: models.open_queries.OpenQueriesModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 49
+  dependencies:
+  - dim_queries
+  - dim_study_site
+  is_enabled: true
+  tags:
+    mart: open_queries
+    domain: drugdev
+- name: query_resolution_time
+  class_path: models.query_resolution_time.QueryResolutionTimeModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 50
+  dependencies:
+  - dim_queries
+  - dim_study_site
+  is_enabled: true
+  tags:
+    mart: query_resolution_time
+    domain: drugdev
+- name: screen_failure_percentage
+  class_path: models.screen_failure_percentage.ScreenFailurePercentageModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 51
+  dependencies:
+  - dim_participant
+  - fct_participant_visit
+  - dim_study_site
+  is_enabled: true
+  tags:
+    mart: screen_failure_percentage
+    domain: drugdev
+- name: site_dates
+  class_path: models.site_dates.SiteDatesModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 52
+  dependencies:
+  - dim_study_site
+  - fct_site_milestone
+  - fct_participant_visit
+  - dim_participant
+  is_enabled: true
+  tags:
+    mart: site_dates
+    domain: drugdev
+- name: site_study
+  class_path: models.site_study.SiteStudyModel
+  type: TABLE
+  strategy: PYSPARK_MODEL
+  write_mode: overwrite
+  order: 53
+  dependencies:
+  - dim_study
+  - dim_study_site
+  is_enabled: true
+  tags:
+    mart: site_study
+    domain: drugdev

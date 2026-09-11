@@ -1,0 +1,17 @@
+{% snapshot ctms_snapshots__account_association %}
+
+
+{{
+    config(
+      unique_key='hash_key',
+      strategy='check',
+      check_cols='all',
+      target_schema='koios_snapshots'
+    )
+}}
+
+
+select * from {{ ref('ctms_stg__account_association')}}
+
+
+{% endsnapshot %}

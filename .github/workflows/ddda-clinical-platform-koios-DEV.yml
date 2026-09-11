@@ -1,0 +1,387 @@
+name: Deploy DAB to dip-dbx-dev-drugdev_da-koios
+on:
+  push:
+    branches:
+      - Koios-DEV-Master
+      - Koios-UAT-Master
+      - master
+  pull_request:
+    types: [closed]
+    branches:
+      - Koios-DEV-Master
+      - Koios-UAT-Master
+      - master
+
+jobs:
+  deploy:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    # runs-on: ubuntu-latest
+    runs-on: arc-runner-set-dt-drugdevelopment-dna
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.10'
+
+      - name: Install new Databricks CLI
+        uses: databricks/setup-cli@612998a68a607601f762e3d13094d83b2f67c480
+        with:
+          version: 0.297.2
+
+      - name: Install jq
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      # Configure AWS credentials with explicit region
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@67fbcbb121271f7775d2e7715933280b06314838
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          aws-region: "us-west-2"
+
+      # Pick secret per branch, set target, repo branch, cluster
+      - name: Set Secrets Manager from branch
+        id: branch_cfg
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH="${{ github.event.pull_request.base.ref }}"
+          else
+            BRANCH="${{ github.ref_name }}"
+          fi
+
+          case "$BRANCH" in
+            master)
+              echo "secrets_manager=${{ secrets.PROD_SECRETS_MANAGER_PATH }}" >> "$GITHUB_OUTPUT"
+              echo "databricks_repo_path=${{ secrets.DATABRICKS_REPO_PATH_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "databricks_branch=master" >> "$GITHUB_OUTPUT"
+              echo "target_env=prod" >> "$GITHUB_OUTPUT"
+              echo "cluster_id=${{ secrets.PROD_CLUSTER_ID }}" >> "$GITHUB_OUTPUT"
+              ;;
+            Koios-UAT-Master)
+              echo "secrets_manager=${{ secrets.TEST_SECRETS_MANAGER_PATH }}" >> "$GITHUB_OUTPUT"
+              echo "databricks_repo_path=${{ secrets.DATABRICKS_REPO_PATH_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "databricks_branch=Koios-UAT-Master" >> "$GITHUB_OUTPUT"
+              echo "target_env=uat" >> "$GITHUB_OUTPUT"
+              echo "cluster_id=${{ secrets.TEST_CLUSTER_ID }}" >> "$GITHUB_OUTPUT"
+              ;;
+            Koios-DEV-Master)
+              # Use the environment-configured DEV secret directly so deploy-time
+              # SRC defaults always come from the same source of truth.
+              echo "secrets_manager=dev-drugdev_da-koios-dbx-details" >> "$GITHUB_OUTPUT"
+              echo "databricks_repo_path=${{ secrets.DATABRICKS_REPO_PATH_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "databricks_branch=Koios-DEV-Master" >> "$GITHUB_OUTPUT"
+              echo "target_env=dev" >> "$GITHUB_OUTPUT"
+              echo "cluster_id=${{ secrets.DEV_CLUSTER_ID }}" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported branch: $BRANCH"
+              exit 1
+              ;;
+          esac
+
+      # Retrieve OAuth credentials from AWS Secrets Manager
+      - name: Retrieve Databricks OAuth credentials
+        id: dbx_auth
+        env:
+          SECRETS_MANAGER: ${{ steps.branch_cfg.outputs.secrets_manager }}
+          AWS_REGION: "us-west-2"
+        run: |
+          set -euo pipefail
+
+          secret="$(aws secretsmanager get-secret-value \
+            --secret-id "$SECRETS_MANAGER" \
+            --region "$AWS_REGION" \
+            --query SecretString \
+            --output text)"
+
+          host="$(echo "$secret" | jq -r '.host // ""' | tr -d '\r')"
+          client_id="$(echo "$secret" | jq -r '.client_id // ""' | tr -d '\r')"
+          client_secret="$(echo "$secret" | jq -r '.client_secret // ""' | tr -d '\r')"
+
+          echo "::add-mask::$client_id"
+          echo "::add-mask::$client_secret"
+
+          echo "host=$host" >> "$GITHUB_OUTPUT"
+          echo "client_id=$client_id" >> "$GITHUB_OUTPUT"
+          echo "client_secret=$client_secret" >> "$GITHUB_OUTPUT"
+          echo "auth_type=oauth-m2m" >> "$GITHUB_OUTPUT"
+
+          # Temporarily keep all secret-derived values optional with defaults.
+          src_raw_bucket="$(echo "$secret" | jq -r '.raw_bucket // "exelixis-clearlake-daplex-dev-us-west-2-441447966705-raw"' | tr -d '\r')"
+          src_stg_bucket="$(echo "$secret" | jq -r '.stg_bucket // ""' | tr -d '\r')"
+          src_catalog="$(echo "$secret" | jq -r '.catalog_name // .catalog // "dev-drugdev_da-koios-catalog"' | tr -d '\r')"
+          src_bronze_schema="$(echo "$secret" | jq -r '.bronze_schema // "dev_drugdev_bronze"' | tr -d '\r')"
+          src_silver_schema="$(echo "$secret" | jq -r '.silver_schema // "dev_drugdev_silver"' | tr -d '\r')"
+          src_gold_schema="$(echo "$secret" | jq -r '.gold_schema // "dev_drugdev_gold"' | tr -d '\r')"
+          src_metadata_catalog="$(echo "$secret" | jq -r '.metadata_catalog // "dev-drugdev_da-koios-catalog"' | tr -d '\r')"
+          src_registry_schema="$(echo "$secret" | jq -r '.registry_schema // "dev_drugdev_common"' | tr -d '\r')"
+          src_metadata_schema="$(echo "$secret" | jq -r '.metadata_schema // "dev_drugdev_common"' | tr -d '\r')"
+          src_environment="$(echo "$secret" | jq -r '.environment // "dev"' | tr -d '\r')"
+          src_source_bucket="$(echo "$secret" | jq -r '.source_bucket // "exelixis-clearlake-daplex-dev-us-west-2-441447966705-raw"' | tr -d '\r')"
+          src_run_date="$(echo "$secret" | jq -r '.run_date // ""' | tr -d '\r')"
+          src_simulation_type="$(echo "$secret" | jq -r '.simulation_type // ""' | tr -d '\r')"
+          src_silver_mode="$(echo "$secret" | jq -r '.silver_mode // "all"' | tr -d '\r')"
+          src_silver_domain="$(echo "$secret" | jq -r '.silver_domain // ""' | tr -d '\r')"
+          src_silver_entity="$(echo "$secret" | jq -r '.silver_entity // ""' | tr -d '\r')"
+          src_silver_study_id="$(echo "$secret" | jq -r '.silver_study_id // ""' | tr -d '\r')"
+          src_silver_vendor="$(echo "$secret" | jq -r '.silver_vendor // ""' | tr -d '\r')"
+          src_silver_entity_workers="$(echo "$secret" | jq -r '.silver_entity_workers // "0"' | tr -d '\r')"
+          src_silver_config_path="$(echo "$secret" | jq -r '.silver_config_path // ""' | tr -d '\r')"
+          src_gold_mode="$(echo "$secret" | jq -r '.gold_mode // "all"' | tr -d '\r')"
+          src_gold_object_name="$(echo "$secret" | jq -r '.gold_object_name // ""' | tr -d '\r')"
+          src_gold_max_workers="$(echo "$secret" | jq -r '.gold_max_workers // "0"' | tr -d '\r')"
+          src_gold_config_path="$(echo "$secret" | jq -r '.gold_config_path // ""' | tr -d '\r')"
+          src_pii_unmask_group="$(echo "$secret" | jq -r '.pii_unmask_group // "OG_DIP_DBricks_Dev_Drugdev_Da_Koios_Domain_Developers,OG_DIP_DBricks_Dev_Drugdev_Da_Koios_Domain_Admins,sp:dev_drugdev_da-koios_svc_git"' | tr -d '\r')"
+          src_days="$(echo "$secret" | jq -r '.days // "1"' | tr -d '\r')"
+
+          echo "src_raw_bucket=$src_raw_bucket" >> "$GITHUB_OUTPUT"
+          echo "src_stg_bucket=$src_stg_bucket" >> "$GITHUB_OUTPUT"
+          echo "src_catalog=$src_catalog" >> "$GITHUB_OUTPUT"
+          echo "src_bronze_schema=$src_bronze_schema" >> "$GITHUB_OUTPUT"
+          echo "src_silver_schema=$src_silver_schema" >> "$GITHUB_OUTPUT"
+          echo "src_gold_schema=$src_gold_schema" >> "$GITHUB_OUTPUT"
+          echo "src_metadata_catalog=$src_metadata_catalog" >> "$GITHUB_OUTPUT"
+          echo "src_registry_schema=$src_registry_schema" >> "$GITHUB_OUTPUT"
+          echo "src_metadata_schema=$src_metadata_schema" >> "$GITHUB_OUTPUT"
+          echo "src_environment=$src_environment" >> "$GITHUB_OUTPUT"
+          echo "src_source_bucket=$src_source_bucket" >> "$GITHUB_OUTPUT"
+          echo "src_run_date=$src_run_date" >> "$GITHUB_OUTPUT"
+          echo "src_simulation_type=$src_simulation_type" >> "$GITHUB_OUTPUT"
+          echo "src_silver_mode=$src_silver_mode" >> "$GITHUB_OUTPUT"
+          echo "src_silver_domain=$src_silver_domain" >> "$GITHUB_OUTPUT"
+          echo "src_silver_entity=$src_silver_entity" >> "$GITHUB_OUTPUT"
+          echo "src_silver_study_id=$src_silver_study_id" >> "$GITHUB_OUTPUT"
+          echo "src_silver_vendor=$src_silver_vendor" >> "$GITHUB_OUTPUT"
+          echo "src_silver_entity_workers=$src_silver_entity_workers" >> "$GITHUB_OUTPUT"
+          echo "src_silver_config_path=$src_silver_config_path" >> "$GITHUB_OUTPUT"
+          echo "src_gold_mode=$src_gold_mode" >> "$GITHUB_OUTPUT"
+          echo "src_gold_object_name=$src_gold_object_name" >> "$GITHUB_OUTPUT"
+          echo "src_gold_max_workers=$src_gold_max_workers" >> "$GITHUB_OUTPUT"
+          echo "src_gold_config_path=$src_gold_config_path" >> "$GITHUB_OUTPUT"
+          echo "src_pii_unmask_group=$src_pii_unmask_group" >> "$GITHUB_OUTPUT"
+          echo "src_days=$src_days" >> "$GITHUB_OUTPUT"
+
+      - name: Sync Databricks Repo
+        env:
+          DATABRICKS_HOST: ${{ steps.dbx_auth.outputs.host }}
+          DATABRICKS_CLIENT_ID: ${{ steps.dbx_auth.outputs.client_id }}
+          DATABRICKS_CLIENT_SECRET: ${{ steps.dbx_auth.outputs.client_secret }}
+          DATABRICKS_AUTH_TYPE: ${{ steps.dbx_auth.outputs.auth_type }}
+          DATABRICKS_REPO_PATH: ${{ steps.branch_cfg.outputs.databricks_repo_path }}
+          DATABRICKS_BRANCH: ${{ steps.branch_cfg.outputs.databricks_branch }}
+        run: |
+          set -euo pipefail
+
+          REPO_ID="$(databricks repos list --output json \
+            | jq -r --arg PATH "$DATABRICKS_REPO_PATH" '
+                (if type=="array" then .
+                 elif has("repos") then .repos
+                 else [] end)
+                | map(select(.path == $PATH))
+                | .[0].id // empty
+              ')"
+
+          [ -n "$REPO_ID" ] || { echo "Repo not found: $DATABRICKS_REPO_PATH"; exit 1; }
+
+          databricks repos update "$REPO_ID" --branch "$DATABRICKS_BRANCH"
+
+      - name: Validate Asset Bundle
+        env:
+          DATABRICKS_HOST: ${{ steps.dbx_auth.outputs.host }}
+          DATABRICKS_CLIENT_ID: ${{ steps.dbx_auth.outputs.client_id }}
+          DATABRICKS_CLIENT_SECRET: ${{ steps.dbx_auth.outputs.client_secret }}
+          DATABRICKS_AUTH_TYPE: ${{ steps.dbx_auth.outputs.auth_type }}
+          TARGET_ENV: ${{ steps.branch_cfg.outputs.target_env }}
+          CLUSTER_ID: ${{ steps.branch_cfg.outputs.cluster_id }}
+          SP_CLIENT_ID: ${{ steps.dbx_auth.outputs.client_id }}
+          SRC_RAW_BUCKET: ${{ steps.dbx_auth.outputs.src_raw_bucket }}
+          SRC_STG_BUCKET: ${{ steps.dbx_auth.outputs.src_stg_bucket }}
+          SRC_CATALOG: ${{ steps.dbx_auth.outputs.src_catalog }}
+          SRC_BRONZE_SCHEMA: ${{ steps.dbx_auth.outputs.src_bronze_schema }}
+          SRC_SILVER_SCHEMA: ${{ steps.dbx_auth.outputs.src_silver_schema }}
+          SRC_GOLD_SCHEMA: ${{ steps.dbx_auth.outputs.src_gold_schema }}
+          SRC_METADATA_CATALOG: ${{ steps.dbx_auth.outputs.src_metadata_catalog }}
+          SRC_REGISTRY_SCHEMA: ${{ steps.dbx_auth.outputs.src_registry_schema }}
+          SRC_METADATA_SCHEMA: ${{ steps.dbx_auth.outputs.src_metadata_schema }}
+          SRC_ENVIRONMENT: ${{ steps.dbx_auth.outputs.src_environment }}
+          SRC_SOURCE_BUCKET: ${{ steps.dbx_auth.outputs.src_source_bucket }}
+          SRC_RUN_DATE: ${{ steps.dbx_auth.outputs.src_run_date }}
+          SRC_SIMULATION_TYPE: ${{ steps.dbx_auth.outputs.src_simulation_type }}
+          SRC_SILVER_MODE: ${{ steps.dbx_auth.outputs.src_silver_mode }}
+          SRC_SILVER_DOMAIN: ${{ steps.dbx_auth.outputs.src_silver_domain }}
+          SRC_SILVER_ENTITY: ${{ steps.dbx_auth.outputs.src_silver_entity }}
+          SRC_SILVER_STUDY_ID: ${{ steps.dbx_auth.outputs.src_silver_study_id }}
+          SRC_SILVER_VENDOR: ${{ steps.dbx_auth.outputs.src_silver_vendor }}
+          SRC_SILVER_ENTITY_WORKERS: ${{ steps.dbx_auth.outputs.src_silver_entity_workers }}
+          SRC_SILVER_CONFIG_PATH: ${{ steps.dbx_auth.outputs.src_silver_config_path }}
+          SRC_GOLD_MODE: ${{ steps.dbx_auth.outputs.src_gold_mode }}
+          SRC_GOLD_OBJECT_NAME: ${{ steps.dbx_auth.outputs.src_gold_object_name }}
+          SRC_GOLD_MAX_WORKERS: ${{ steps.dbx_auth.outputs.src_gold_max_workers }}
+          SRC_GOLD_CONFIG_PATH: ${{ steps.dbx_auth.outputs.src_gold_config_path }}
+          SRC_DAYS: ${{ steps.dbx_auth.outputs.src_days }}
+        run: |
+          set -euo pipefail
+          cd "${{ secrets.Databricks_YML_Path }}"
+          databricks bundle validate \
+            --target "$TARGET_ENV" \
+            --var "cluster_id=$CLUSTER_ID" \
+            --var "service_principal_client_id=$SP_CLIENT_ID" \
+            --var "src_raw_bucket=$SRC_RAW_BUCKET" \
+            --var "src_stg_bucket=$SRC_STG_BUCKET" \
+            --var "src_catalog=$SRC_CATALOG" \
+            --var "src_bronze_schema=$SRC_BRONZE_SCHEMA" \
+            --var "src_silver_schema=$SRC_SILVER_SCHEMA" \
+            --var "src_gold_schema=$SRC_GOLD_SCHEMA" \
+            --var "src_metadata_catalog=$SRC_METADATA_CATALOG" \
+            --var "src_registry_schema=$SRC_REGISTRY_SCHEMA" \
+            --var "src_metadata_schema=$SRC_METADATA_SCHEMA" \
+            --var "src_environment=$SRC_ENVIRONMENT" \
+            --var "src_source_bucket=$SRC_SOURCE_BUCKET" \
+            --var "src_run_date=$SRC_RUN_DATE" \
+            --var "src_simulation_type=$SRC_SIMULATION_TYPE" \
+            --var "src_silver_mode=$SRC_SILVER_MODE" \
+            --var "src_silver_domain=$SRC_SILVER_DOMAIN" \
+            --var "src_silver_entity=$SRC_SILVER_ENTITY" \
+            --var "src_silver_study_id=$SRC_SILVER_STUDY_ID" \
+            --var "src_silver_vendor=$SRC_SILVER_VENDOR" \
+            --var "src_silver_entity_workers=$SRC_SILVER_ENTITY_WORKERS" \
+            --var "src_silver_config_path=$SRC_SILVER_CONFIG_PATH" \
+            --var "src_gold_mode=$SRC_GOLD_MODE" \
+            --var "src_gold_object_name=$SRC_GOLD_OBJECT_NAME" \
+            --var "src_gold_max_workers=$SRC_GOLD_MAX_WORKERS" \
+            --var "src_gold_config_path=$SRC_GOLD_CONFIG_PATH" \
+            --var "src_days=$SRC_DAYS"
+
+      - name: Deploy Asset Bundle
+        env:
+          DATABRICKS_HOST: ${{ steps.dbx_auth.outputs.host }}
+          DATABRICKS_CLIENT_ID: ${{ steps.dbx_auth.outputs.client_id }}
+          DATABRICKS_CLIENT_SECRET: ${{ steps.dbx_auth.outputs.client_secret }}
+          DATABRICKS_AUTH_TYPE: ${{ steps.dbx_auth.outputs.auth_type }}
+          TARGET_ENV: ${{ steps.branch_cfg.outputs.target_env }}
+          CLUSTER_ID: ${{ steps.branch_cfg.outputs.cluster_id }}
+          # client_id from Secrets Manager doubles as the SP application ID
+          # that owns the created job (run_as.service_principal_name in databricks.yml).
+          SP_CLIENT_ID: ${{ steps.dbx_auth.outputs.client_id }}
+          SRC_RAW_BUCKET: ${{ steps.dbx_auth.outputs.src_raw_bucket }}
+          SRC_STG_BUCKET: ${{ steps.dbx_auth.outputs.src_stg_bucket }}
+          SRC_CATALOG: ${{ steps.dbx_auth.outputs.src_catalog }}
+          SRC_BRONZE_SCHEMA: ${{ steps.dbx_auth.outputs.src_bronze_schema }}
+          SRC_SILVER_SCHEMA: ${{ steps.dbx_auth.outputs.src_silver_schema }}
+          SRC_GOLD_SCHEMA: ${{ steps.dbx_auth.outputs.src_gold_schema }}
+          SRC_METADATA_CATALOG: ${{ steps.dbx_auth.outputs.src_metadata_catalog }}
+          SRC_REGISTRY_SCHEMA: ${{ steps.dbx_auth.outputs.src_registry_schema }}
+          SRC_METADATA_SCHEMA: ${{ steps.dbx_auth.outputs.src_metadata_schema }}
+          SRC_ENVIRONMENT: ${{ steps.dbx_auth.outputs.src_environment }}
+          SRC_SOURCE_BUCKET: ${{ steps.dbx_auth.outputs.src_source_bucket }}
+          SRC_RUN_DATE: ${{ steps.dbx_auth.outputs.src_run_date }}
+          SRC_SIMULATION_TYPE: ${{ steps.dbx_auth.outputs.src_simulation_type }}
+          SRC_SILVER_MODE: ${{ steps.dbx_auth.outputs.src_silver_mode }}
+          SRC_SILVER_DOMAIN: ${{ steps.dbx_auth.outputs.src_silver_domain }}
+          SRC_SILVER_ENTITY: ${{ steps.dbx_auth.outputs.src_silver_entity }}
+          SRC_SILVER_STUDY_ID: ${{ steps.dbx_auth.outputs.src_silver_study_id }}
+          SRC_SILVER_VENDOR: ${{ steps.dbx_auth.outputs.src_silver_vendor }}
+          SRC_SILVER_ENTITY_WORKERS: ${{ steps.dbx_auth.outputs.src_silver_entity_workers }}
+          SRC_SILVER_CONFIG_PATH: ${{ steps.dbx_auth.outputs.src_silver_config_path }}
+          SRC_GOLD_MODE: ${{ steps.dbx_auth.outputs.src_gold_mode }}
+          SRC_GOLD_OBJECT_NAME: ${{ steps.dbx_auth.outputs.src_gold_object_name }}
+          SRC_GOLD_MAX_WORKERS: ${{ steps.dbx_auth.outputs.src_gold_max_workers }}
+          SRC_GOLD_CONFIG_PATH: ${{ steps.dbx_auth.outputs.src_gold_config_path }}
+          SRC_DAYS: ${{ steps.dbx_auth.outputs.src_days }}
+        run: |
+          set -euo pipefail
+          cd "${{ secrets.Databricks_YML_Path }}"
+          databricks bundle deploy \
+            --target "$TARGET_ENV" \
+            --var "cluster_id=$CLUSTER_ID" \
+            --var "service_principal_client_id=$SP_CLIENT_ID" \
+            --var "src_raw_bucket=$SRC_RAW_BUCKET" \
+            --var "src_stg_bucket=$SRC_STG_BUCKET" \
+            --var "src_catalog=$SRC_CATALOG" \
+            --var "src_bronze_schema=$SRC_BRONZE_SCHEMA" \
+            --var "src_silver_schema=$SRC_SILVER_SCHEMA" \
+            --var "src_gold_schema=$SRC_GOLD_SCHEMA" \
+            --var "src_metadata_catalog=$SRC_METADATA_CATALOG" \
+            --var "src_registry_schema=$SRC_REGISTRY_SCHEMA" \
+            --var "src_metadata_schema=$SRC_METADATA_SCHEMA" \
+            --var "src_environment=$SRC_ENVIRONMENT" \
+            --var "src_source_bucket=$SRC_SOURCE_BUCKET" \
+            --var "src_run_date=$SRC_RUN_DATE" \
+            --var "src_simulation_type=$SRC_SIMULATION_TYPE" \
+            --var "src_silver_mode=$SRC_SILVER_MODE" \
+            --var "src_silver_domain=$SRC_SILVER_DOMAIN" \
+            --var "src_silver_entity=$SRC_SILVER_ENTITY" \
+            --var "src_silver_study_id=$SRC_SILVER_STUDY_ID" \
+            --var "src_silver_vendor=$SRC_SILVER_VENDOR" \
+            --var "src_silver_entity_workers=$SRC_SILVER_ENTITY_WORKERS" \
+            --var "src_silver_config_path=$SRC_SILVER_CONFIG_PATH" \
+            --var "src_gold_mode=$SRC_GOLD_MODE" \
+            --var "src_gold_object_name=$SRC_GOLD_OBJECT_NAME" \
+            --var "src_gold_max_workers=$SRC_GOLD_MAX_WORKERS" \
+            --var "src_gold_config_path=$SRC_GOLD_CONFIG_PATH" \
+            --var "src_days=$SRC_DAYS"
+
+      - name: Verify SRC Pipeline Deployment And Permissions
+        env:
+          DATABRICKS_HOST: ${{ steps.dbx_auth.outputs.host }}
+          DATABRICKS_CLIENT_ID: ${{ steps.dbx_auth.outputs.client_id }}
+          DATABRICKS_CLIENT_SECRET: ${{ steps.dbx_auth.outputs.client_secret }}
+          DATABRICKS_AUTH_TYPE: ${{ steps.dbx_auth.outputs.auth_type }}
+          TARGET_ENV: ${{ steps.branch_cfg.outputs.target_env }}
+        run: |
+          set -euo pipefail
+
+          JOB_NAME="DDDA Clinical Platform Pipeline SRC [${TARGET_ENV}]"
+
+          JOB_ID=$(databricks jobs list --output json \
+            | jq -r --arg NAME "$JOB_NAME" '
+                (if type=="array" then . elif has("jobs") then .jobs else [] end)
+                | map(select(.settings.name == $NAME))
+                | .[0].job_id // empty
+              ')
+
+          if [ -z "$JOB_ID" ]; then
+            echo "ERROR: Could not find Databricks job: $JOB_NAME"
+            echo "Bundle deploy succeeded but SRC pipeline job was not created."
+            exit 1
+          fi
+
+          echo "Found SRC pipeline job: $JOB_NAME (id=$JOB_ID)"
+
+          PERMS_JSON=$(databricks permissions get jobs "$JOB_ID" --output json)
+
+          USERS_HAS_ACCESS=$(echo "$PERMS_JSON" | jq -r '
+            [
+              (.access_control_list // [] )[]
+              | select(.group_name == "users")
+              | (.all_permissions // [])[]
+              | select(
+                  .permission_level == "CAN_VIEW"
+                  or .permission_level == "CAN_MANAGE_RUN"
+                  or .permission_level == "CAN_MANAGE"
+                  or .permission_level == "IS_OWNER"
+                )
+            ] | length
+          ')
+
+          if [ "$USERS_HAS_ACCESS" -lt 1 ]; then
+            echo "ERROR: users group permissions missing on $JOB_NAME"
+            echo "Expected one of: CAN_VIEW, CAN_MANAGE_RUN, CAN_MANAGE, IS_OWNER"
+            echo "Permissions payload:"
+            echo "$PERMS_JSON"
+            exit 1
+          fi
+
+          echo "SRC pipeline permissions verified: users has effective access"
+

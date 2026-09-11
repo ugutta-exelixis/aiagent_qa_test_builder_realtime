@@ -1,0 +1,7 @@
+version: 2
+
+sources:
+  - name: koios_raw
+    schema: koios_raw
+    tables:
+      - name: pra_exl_study_xl092-311

@@ -1,0 +1,1820 @@
+version: 2
+
+sources:
+  - name: koios_raw
+    description: ctms Postgress database.
+    database: koios
+    schema: koios_raw
+    tables:
+      - name: enroll_forecast_xb002-101
+        description: enroll forecast informaiton about xb002-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+      - name: xb002_101_cohort_summary_report
+        description: cohort summary report XB002_101
+
+      - name: prancer_cohort_summary_report_xl092_002
+        description: cohort summary report xl092_002
+      
+      - name: site_contact_details_actual_xl092-304
+        description: 304 site details
+
+      - name: cohort_summary_mapping
+        description: cohort summary mapping
+
+      - name: site_contact_details_xl092-304
+        description: enroll forecast informaiton about xb002-101 study.
+      
+
+      - name: enroll_forecast_xl092-002
+        description: enroll forecast informaiton about xl092-002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: enroll_forecast_xl092-303
+        description: enroll forecast informaiton about xl092-303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: enroll_forecast_xl102-101
+        description: enroll forecast informaiton about xl102-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: enroll_forecast_xl114-101
+        description: enroll forecast informaiton about xl114-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: enroll_forecast_xl184-021
+        description: enroll forecast informaiton about xl184-021 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: enroll_forecast_xl184-311
+        description: enroll forecast informaiton about xl184-311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: enroll_forecast_xl184-312
+        description: enroll forecast informaiton about xl184-312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: enroll_forecast_xl184-315
+        description: enroll forecast informaiton about xl184-315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account_association_xb002_101
+        description: account_association informaiton about xb002_101 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account_association_xl092-002
+        description: account_association informaiton about xl092-002 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account_association_xl092-303
+        description: account_association informaiton about xl092-303 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account_association_xl092_001
+        description: account_association informaiton about xl092_001 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account_association_xl102_101
+        description: account_association informaiton about xl102_101 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account_association_xl114-101
+        description: account_association informaiton about xl114-101 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account_association_xl184_021
+        description: account_association informaiton about xl184_021 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account_association_xl184_311
+        description: account_association informaiton about xl184_311 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account_association_xl184_312
+        description: account_association informaiton about xl184_312 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account_association_xl184_315
+        description: account_association informaiton about xl184_315 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_address_association_xl092-002
+        description: address association informaiton about xl092-002 study.
+        columns:
+          - name: address_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_address_association_xl092-303
+        description: address association informaiton about xl092-303 study.
+        columns:
+          - name: address_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_address_association_xl092_001
+        description: address association informaiton about xl092_001 study.
+        columns:
+          - name: address_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_address_association_xl102_101
+        description: address association informaiton about xl102_101 study.
+        columns:
+          - name: address_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_address_association_xl114-101
+        description: address association informaiton about xl114-101 study.
+        columns:
+          - name: address_id
+            description: not nullable column.
+            tests:
+              - not_null
+                        
+      - name: pra_exl_address_association_xl184_021
+        description: address association informaiton about xl184_021 study.
+        columns:
+          - name: address_id
+            description: not nullable column.
+            tests:
+              - not_null
+                                      
+      - name: pra_exl_address_association_xl184_311
+        description: address association informaiton about xl184_311 study.
+        columns:
+          - name: address_id
+            description: not nullable column.
+            tests:
+              - not_null
+                                                    
+      - name: pra_exl_address_association_xl184_312
+        description: address association informaiton about xl184_312 study.
+        columns:
+          - name: address_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_address_association_xb002_101
+        description: pra exl adress association information about xb002_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_address_association_xl184_315
+        description: pra exl adress association information about xl184_315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+                                                                  
+      - name: pra_exl_contact_association_xb002_101
+        description: contact association informaiton about xb002_101 study.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+                                                                                
+      - name: pra_exl_contact_association_xl092-002
+        description: contact association informaiton about xl092-002 study.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+                                                                                              
+      - name: pra_exl_contact_association_xl092-303
+        description: contact association informaiton about xl092-303 study.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_contact_association_xl092_001
+        description: pra exl contact association information about xl092_001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+                                                                                                            
+      - name: pra_exl_contact_association_xl102_101
+        description: contact association informaiton about xl102_101 study.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_contact_association_xl114-101
+        description: contact association informaiton about xl114-101 study.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_contact_association_xl184-312
+        description: contact association informaiton about xl184-312 study.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_contact_association_xl184-315
+        description: contact association informaiton about xl184-315 study.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+                        
+      - name: pra_exl_contact_association_xl184_021
+        description: contact association informaiton about xl184_021 study.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+                                      
+      - name: pra_exl_contact_association_xl184_311
+        description: contact association informaiton about xl184_311 study.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_srm_enroll_proj_xb002-101
+        description: pra exl srm enroll proj informaiton about xb002-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_srm_enroll_proj_xl092-001
+        description: pra exl srm enroll proj informaiton about xl092-001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_enroll_proj_xl092-002
+        description: pra exl srm enroll proj informaiton about xl092-002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_srm_enroll_proj_xl092-303
+        description: pra exl srm enroll proj informaiton about xl092-303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_enroll_proj_xl114-101
+        description: pra exl srm enroll proj informaiton about xl114-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_enroll_proj_xl184-021
+        description: pra exl srm enroll proj informaiton about xl184-021 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_enroll_proj_xl184-311
+        description: pra exl srm enroll proj informaiton about xl184-311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_enroll_proj_xl184-312
+        description: pra exl srm enroll proj informaiton about xl184-312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_enroll_proj_xl184-315
+        description: pra exl srm enroll proj informaiton about xl184-315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_proj_sites_xb002_101
+        description: pra exl srm proj sites informaiton about xb002_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_proj_sites_xl092_001
+        description: pra exl srm proj sites informaiton about xl092_001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_proj_sites_xl092_002
+        description: pra exl srm proj sites informaiton about xl092_002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_proj_sites_xl092_303
+        description: pra exl srm proj sites informaiton about xl092_303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_proj_sites_xl102_101
+        description: pra exl srm proj sites informaiton about xl102_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_proj_sites_xl114_101
+        description: pra exl srm proj sites informaiton about xl114_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_proj_sites_xl184_021
+        description: pra exl srm proj sites informaiton about xl184_021 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_proj_sites_xl184_311
+        description: pra exl srm proj sites informaiton about xl184_311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_proj_sites_xl184_312
+        description: pra exl srm proj sites informaiton about xl184_312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_srm_proj_sites_xl184_315
+        description: pra exl srm proj sites informaiton about xl184_315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_country_xb002_101
+        description: pra exl study country informaiton about xb002_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_country_xl092-002
+        description: pra exl study country informaiton about xl092-002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_country_xl092-303
+        description: pra exl study country informaiton about xl092-303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_country_xl092_001
+        description: pra exl study country informaiton about xl092_001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_country_xl102_101
+        description: pra exl study country informaiton about xl102_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_country_xl114-101
+        description: pra exl study country informaiton about xl114-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_country_xl184_021
+        description:  pra exl study country informaiton about xl184_021 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_country_xl184_311
+        description:  pra exl study country informaiton about xl184_311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_country_xl184_312
+        description: pra exl study country informaiton about xl184_312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_country_xl184_315
+        description: pra exl study country informaiton about xl184_315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_metric_xb002_101
+        description: pra exl study metric informaiton about xb002_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_metric_xl092-002
+        description: pra exl study metric informaiton about xl092-002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_metric_xl092-303
+        description: pra exl study metric informaiton about xl092-303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_metric_xl092_001
+        description: pra exl study metric informaiton about xl092_001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_metric_xl102_101
+        description: pra exl study metric informaiton about xl102_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_metric_xl114-101
+        description: pra exl study metric informaiton about xl114-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_metric_xl184_021
+        description: pra exl study metric informaiton about xl184_021 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_metric_xl184_311
+        description: pra exl study metric informaiton about xl184_311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_metric_xl184_312
+        description: pra exl study metric informaiton about xl184_312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_metric_xl184_315
+        description: pra exl study metric informaiton about xl184_315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_milestone_xb002_101
+        description: pra exl study milestone informaiton about xb002_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_milestone_xl092-002
+        description:  pra exl study milestone informaiton about xl092-002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_milestone_xl092-303
+        description: pra exl study milestone informaiton about xl092-303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_milestone_xl092_001
+        description: pra exl study milestone informaiton about xl092_001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_milestone_xl102_101
+        description: pra exl study milestone informaiton about xl102_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_milestone_xl114-101
+        description: pra exl study milestone informaiton about xl114-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_milestone_xl184_021
+        description: pra exl study milestone informaiton about xl184_021 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_milestone_xl184_311
+        description: pra exl study milestone informaiton about xl184_311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_milestone_xl184_312
+        description: pra exl study milestone informaiton about xl184_312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_milestone_xl184_315
+        description: pra exl study milestone informaiton about xl184_315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_monitor_xb002_101
+        description: pra exl study site monitor informaiton about xb002_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_monitor_xl092-002
+        description:  pra exl study site monitor informaiton about xl092-002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_monitor_xl092-303
+        description: pra exl study site monitor informaiton about xl092-303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_monitor_xl092_001
+        description: pra exl study site monitor informaiton about xl092_001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_monitor_xl102_101
+        description:  pra exl study site monitor informaiton about xl102_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_monitor_xl114-101
+        description: pra exl study site monitor informaiton about xl114-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_monitor_xl184_021
+        description: pra exl study site monitor informaiton about xl184_021 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_monitor_xl184_311
+        description: pra exl study site monitor informaiton about xl184_311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_monitor_xl184_312
+        description: pra exl study site monitor informaiton about xl184_312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_monitor_xl184_315
+        description: pra exl study site monitor informaiton about xl184_315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_xb002_101
+        description:  pra exl study site informaiton about xb002_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_xl092-002
+        description: pra exl study site informaiton about xl092-002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_xl092-303
+        description: pra exl study site informaiton about xl092-303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_xl092_001
+        description: pra exl study site informaiton about xl092_001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_xl102_101
+        description: pra exl study site informaiton about xl102_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_xl114-101
+        description: pra exl study site informaiton about xl114-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_xl184_021
+        description: pra exl study site informaiton about xl184_021 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_xl184_311
+        description: pra exl study site informaiton about xl184_311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_xl184_312
+        description: pra exl study site informaiton about xl184_312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_site_xl184_315
+        description: pra exl study site informaiton about xl184_315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_subject_xb002_101
+        description: pra exl study subject informaiton about xb002_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_subject_xl092-002
+        description: pra exl study subject informaiton about xl092-002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_subject_xl092-303
+        description: pra exl study subject informaiton about xl092-303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_subject_xl092_001
+        description: pra exl study subject informaiton about xl092_001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_subject_xl102_101
+        description: pra exl study subject informaiton about xl102_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_subject_xl114-101
+        description: pra exl study subject informaiton about xl114-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_subject_xl184_311
+        description: pra exl study subject informaiton about xl184_311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_subject_xl184_312
+        description: pra exl study subject informaiton about xl184_312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_subject_xl184_315
+        description: pra exl study subject informaiton about xl184_315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_submission_xb002_101
+        description: pra exl study submission informaiton about xb002_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_submission_xl092-002
+        description: pra exl study submission informaiton about xl092-002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_submission_xl092-303
+        description: pra exl study submission informaiton about xl092-303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_submission_xl092_001
+        description: pra exl study submission informaiton about xl092_001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_submission_xl102_101
+        description: pra exl study submission informaiton about xl102_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_submission_xl114-101
+        description: pra exl study submission informaiton about xl114-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_submission_xl184_021
+        description: pra exl study submission informaiton about xl184_021 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_submission_xl184_311
+        description: pra exl study submission informaiton about xl184_311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_submission_xl184_312
+        description: pra exl study submission informaiton about xl184_312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_submission_xl184_315
+        description: pra exl study submission informaiton about xl184_315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_xb002-101
+        description: pra exl study informaiton about xb002-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_xl092-002
+        description: pra exl study informaiton about xl092-002 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_xl092-303
+        description: pra exl study informaiton about xl092-303 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_xl092_001
+        description: pra exl study informaiton about xl092_001 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_xl102_101
+        description: pra exl study informaiton about xl102_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_xl114-101
+        description: pra exl study informaiton about xl114-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_xl184_021
+        description: pra exl study informaiton about xl184_021 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_xl184_311
+        description: pra exl study informaiton about xl184_311 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_xl184_312
+        description: pra exl study informaiton about xl184_312 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: pra_exl_study_xl184_315
+        description: pra exl study informaiton about xl184_315 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: subject_summary_report_xb002_101
+        description: subject summary report information about xb002_101 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: subject_summary_report_xl092_001
+        description: subject summary report information about xl092_001 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: subject_summary_report_xl092_002
+        description: subject summary report information about xl092_002 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: subject_summary_report_xl092_303
+        description: subject summary report information about xl092_303 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: subject_summary_report_xl184_315
+        description: subject summary report information about xl184_315 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: subject_visit_summary_report_xb002_101
+        description: subject visit summary report information about xb002_101 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: subject_visit_summary_report_xl092_001
+        description: subject visit summary report information about xl092_001 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: subject_visit_summary_report_xl092_002
+        description: subject visit summary report information about xl092_002 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: subject_visit_summary_report_xl092_303
+        description: subject visit summary report information about xl092_303 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: subject_visit_summary_report_xl184_315
+        description: subject visit summary report information about xl184_315 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+            
+      - name: xb002-101_overall_edc_study_metrics
+        description: overall edc study metrics information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xb002-101_query_detail
+        description: query detail information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-002_query_detail
+        description: query detail information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-001_query_detail
+        description: query detail information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-303_query_detail
+        description: query detail information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl102-101_query_detail
+        description: query detail information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl184-315_query_detail_apac
+        description: query detail information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl184-315_query_detail_na_row
+        description: query detail information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl184-315_query_details_uncl
+        description: query detail information about xl184-315 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xb002-101_subject_summary
+        description: subject summary information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-001_subject_summary
+        description: subject summary information about xl092-002 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-002_subject_summary
+        description: subject summary information about xl092-002 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-303_subject_summary
+        description: subject summary information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl102-101_subject_summary
+        description: subject summary information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl184-315_subject_summary
+        description: subject summary information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xb002-101_subject_summary_by_visit
+        description: subject summary by visit information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+    
+      - name: xl092-001_subject_summary_by_visit
+        description: subject summary by visit information about xl092-002 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-002_subject_summary_by_visit
+        description: subject summary by visit information about xl092-002 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-303_subject_summary_by_visit
+        description: subject summary by visit information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl102-101_subject_summary_by_visit
+        description: subject summary by visit information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl184-315_subject_summary_by_visit
+        description: subject summary by visit information about xb002-101 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+    
+      - name: xl092-001_overall_edc_study_metrics
+        description: overall edc study metrics information about xl184-315 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-002_overall_edc_study_metrics
+        description: overall edc study metrics information about xl184-315 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-303_overall_edc_study_metrics
+        description: overall edc study metrics information about xl184-315 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl102-101_overall_edc_study_metrics
+        description: overall edc study metrics information about xl184-315 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl184-315_overall_edc_study_metrics
+        description: overall edc study metrics information about xl184-315 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_account
+        description: global account information of pra exl.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_address
+        description: global address information of pra exl.
+        columns:
+          - name: address_id
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: pra_exl_contact
+        description: global contact information of pra exl.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: xl092_002_earlyphase_subject_status
+        description: Early phase subject status data for XL092-002 study.
+        columns:
+          - name: project
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092_002_earlyphase_subject_visit
+        description: Early phase subject visit data for XL092-002 study.
+        columns:
+          - name: project
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xb002_101_earlyphase_subject_status
+        description: Early phase subject status data for XB002-101 study.
+        columns:
+          - name: project
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xb002_101_earlyphase_subject_visit
+        description: Early phase subject visit data for XB002-101 study.
+        columns:
+          - name: project
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: subject_summary_report_xl092-304
+        description: subject summary report informaiton for XL092-304 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: subject_visit_summary_report_xl092-304
+        description: subject visit summary report informaiton for XL092-304 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-304_overall_edc_study_metrics
+        description: overall edc metrics informaiton for XL092-304 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-304_subject_summary
+        description: subject summary informaiton for XL092-304 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-304_subject_summary_by_visit
+        description: subject summary by visit informaiton for XL092-304 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-304_query_detail
+        description: query details informaiton for XL092-304 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-303_missing_pages
+        description: missing pages informaiton for XL092-303 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-304_missing_pages
+        description: missing pages informaiton for XL092-304 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-002_missing_pages
+        description: missing pages informaiton for XL092-002 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xb002-101_missing_pages
+        description: missing pages informaiton for xb002-101 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+     
+      - name: site_contact_details_actual_xl092-009
+        description: site informaiton for xl092-009 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: cenduit_blinded_subject_visit_xl092-009
+        description: subject visit summary report information about xl092-009 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null  
+     
+      - name: cenduit_subject_detail_xl092-009
+        description: subject summary report information about xl092-009 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-009_missing_pages
+        description: missing pages informaiton for xl092-009 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+      
+      - name: xl092-009_overall_edc_study_metrics
+        description: overall edc metrics informaiton for xl092-009 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-009_subject_summary
+        description: subject summary informaiton for xl092-009 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-009_subject_summary_by_visit
+        description: subject summary by visit informaiton for xl092-009 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-009_query_detail
+        description: query details informaiton for xl092-009 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+              
+      - name: site_contact_details_xl092-009
+        description: site_contact informaiton for xl092-009 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+                    
+      - name: manual_exl_study_xl092-009
+        description: study details informaiton for xl092-009 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-009_cohort_summary_report
+        description: cohort summary report xl092_009
+
+      - name: cenduit_blinded_subject_visit_xl092-305
+        description: subject visit summary report information about xl092-305 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null  
+     
+      - name: cenduit_subject_detail_xl092-305
+        description: subject summary report information about xl092-305 study.
+        columns:
+          - name: country
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: site_contact_details_xl092-305
+        description: site_contact informaiton for xl092-305 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: site_contact_details_actual_xl092-305
+        description: site informaiton for xl092-305 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+      
+      - name: xl092-305_missing_pages
+        description: missing pages informaiton for xl092-305 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+      
+      - name: xl092-305_overall_edc_study_metrics
+        description: overall edc metrics informaiton for xl092-305 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-305_subject_summary
+        description: subject summary informaiton for xl092-305 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-305_subject_summary_by_visit
+        description: subject summary by visit informaiton for xl092-305 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: xl092-305_query_detail
+        description: query details informaiton for xl092-305 study.
+        columns:
+          - name: studyid
+            description: not nullable column.
+            tests:
+              - not_null
+      
+
+      - name: pra_exl_account_association_xb010-101
+        description: account_association informaiton about xb010_101 study.
+        columns:
+          - name: account_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_address_association_xb010-101
+        description: pra exl adress association information about xb010_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_contact_association_xb010-101
+        description: contact association informaiton about xb010_101 study.
+        columns:
+          - name: contact_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_srm_enroll_proj_xb010-101
+        description: pra exl srm enroll proj informaiton about xb010-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_srm_proj_sites_xb010-101
+        description: pra exl srm proj sites informaiton about xb010_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_study_country_xb010-101
+        description: pra exl study country informaiton about xb010_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_study_metric_xb010-101
+        description: pra exl study metric informaiton about xb010_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_study_milestone_xb010-101
+        description: pra exl study milestone informaiton about xb010_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_study_site_monitor_xb010-101
+        description: pra exl study site monitor informaiton about xb010_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_study_site_xb010-101
+        description:  pra exl study site informaiton about xb010_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+      
+      - name: pra_exl_study_subject_xb010-101
+        description: pra exl study subject informaiton about xb010_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: pra_exl_study_submission_xb010-101
+        description: pra exl study submission informaiton about xb010_101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+      
+      - name: pra_exl_study_xb010-101
+        description: pra exl study informaiton about xb010-101 study.
+        columns:
+          - name: study_protocol_number
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: subject_summary_report_xb010-101
+        description: subject summary report information about xb010_101 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null
+
+      - name: subject_visit_summary_report_xb010-101
+        description: subject visit summary report information about xb010_101 study.
+        columns:
+          - name: study_id
+            description: not nullable column.
+            tests:
+              - not_null

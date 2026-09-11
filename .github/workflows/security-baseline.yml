@@ -1,0 +1,37 @@
+on:
+  schedule:
+    - cron: "0 0 * * *" # “Run every midnight”
+  push:
+    branches:
+      - main # run every time a PR is merged into main branch
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  wiz-cli-github-iac-scan:
+    name: "SAST Baseline Scans"
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ACTIONS_RUNNER_DEBUG: false
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check out Git Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Run security checks
+        uses: exelixis-cpe/exelixis-secure-ci-action@main
+        with:
+          service-account: business-applications
+          scan-type: baseline
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

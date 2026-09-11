@@ -1,0 +1,52 @@
+
+environment: dev
+
+aws_secret_name: "dev-drugdev_da-koios-dbx-details"
+
+catalog: "{{SECRET:catalog_name}}"
+
+common_schema: common    # schema_registry, dq_results, metrics, drift_log, etc.
+gold_schema:   gold      # domain_registry, vendor_config, vendor_schedule, etc.
+
+domain_aliases:
+  IPP: Planisware
+
+# ── DQ thresholds ─────────────────────────────────────────────────────────────
+dq:
+  min_pass_rate_pct:     98.0
+  max_critical_failures: 0
+  max_high_failures:     3
+
+# ── Platform tunables ─────────────────────────────────────────────────────────
+platform:
+  log_level:                INFO
+  max_retry_attempts:       3
+  retry_wait_seconds:       30
+  spark_shuffle_partitions: 200
+  temp_dir:                 /tmp/ddda
+
+# ── Onboarding feature flags ──────────────────────────────────────────────────
+onboarding:
+  auto_register_vendor:  false
+  auto_register_domain:  false
+  require_approval:      true
+  report_output_path:    /Workspace/Repos/ddda-clinical-platform-koios/dt-drugdevelopment-dna/onboarding_reports
+
+# ── Notification behaviour switches (non-sensitive) ───────────────────────────
+# Sensitive values (addresses, recipients, webhook URLs) live in AWS Secrets
+# Manager under the secret named by aws_secret_name above. See docs/secret_keys.md.
+notifications:
+  email:
+    enabled:      false        # set true in UAT/prod once SES is wired
+    smtp_driver:  ses          # ses | smtp
+    # Secret keys resolved at runtime from aws_secret_name (not stored here):
+    #   email_from_address                   → SES source address
+    #   email_reply_to                       → reply-to address
+    #   email_recipients_critical_json       → JSON list of addresses
+    #   email_recipients_high_json
+    #   email_recipients_medium_json
+    #   s3_region                            → reused as SES region
+  teams:
+    enabled:      false        # set true in UAT/prod once webhook is provisioned
+    # Secret key: teams_webhook_url
+  domain_recipients: {}

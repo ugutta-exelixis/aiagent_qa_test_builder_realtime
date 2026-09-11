@@ -1,0 +1,19 @@
+models:
+  - name: ctms_stg__subject_summary_report
+    description: Combined subject-level data from multiple sources.
+    columns:
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['Off study', 'On Treatment', 'Screening', 'Screen Failure', 'On Study', 'Completed', 'Discontinued', 'Enrolled', 'In-Active', 'Off study', 'On Treatment', 'Randomized', 'Screen Failure RollbackRequested']
+              config:
+                where: "source_table = 'subject_summary_report_xl092-311'"
+      - name: cohort
+        tests:
+          - not_null:
+              config:
+                where: "source_table != 'subject_summary_report_xl092-311'"
+      - name: hash_key
+        tests:
+          - not_null
+          - unique

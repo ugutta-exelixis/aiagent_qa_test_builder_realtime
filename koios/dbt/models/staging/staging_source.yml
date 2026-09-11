@@ -1,0 +1,218 @@
+version: 2
+
+sources:
+  - name: koios_staging
+    description: ctms Postgres staging schema.
+    database: koios
+    schema: koios_staging
+    tables:
+      - name: ctms_stg__enroll_forecast
+        description: Enroll forecast information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__account_association
+        description: PRA Exelixis account association information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__address_association
+        description: PRA Exelixis address association information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__contact_association
+        description: PRA Exelixis contact association information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__srm_enroll_proj
+        description: PRA Exelixis SRM enrollment project information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__srm_proj_sites
+        description: PRA Exelixis SRM project sites information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_country
+        description: PRA Exelixis study country information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study
+        description: PRA Exelixis study information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_metric
+        description: PRA Exelixis study metric information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_milestone
+        description: PRA Exelixis study milestone information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_site
+        description: PRA Exelixis study site information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_site_monitor
+        description: PRA Exelixis study site monitor information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_subject
+        description: PRA Exelixis study subject information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_submission
+        description: PRA Exelixis study submission information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: subject_visit_summary_report_data
+        description: Subject visit summary report information of all studies.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__account
+        description: Global account information.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__address
+        description: Global address information.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__missing_pages
+        description: Missing pages information.
+        columns:
+          - name: hash_key
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__study_site_phase3
+        description: Site information for XL092-304 and XL092-009.
+        columns:
+          - name: study_id_sk
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__site_contact_details_phase3
+        description: Site information for XL092-304 and XL092-009.
+        columns:
+          - name: study_id_sk
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__cohort_summary_mapping
+        description: Cohort information for XL092-002 and XB002-101.
+        columns:
+          - name: study_id_sk
+            description: Not nullable column.
+            tests:
+              - not_null
+              - unique
+
+      - name: ctms_stg__planisware_model
+        description: Planisware data information.
+
+      - name: ctms_stg__planisware_qc_model
+        description: Planisware data information for quality capture report.
+
+      - name: planisware_req_ref
+        description: Reference table for required Planisware milestones.
+
+      - name: planisware_exs_ref
+        description: Reference table for existing Planisware milestones.
+      - name: participant_status_master
+        description: reference table for required statuses of participants
+
+      - name: ctms_stg__subject_summary_report
+        description: Combined subject-level data from multiple sources.
+        columns:
+          - name: status
+            tests:
+              - accepted_values:
+                  values: ['Off study', 'On Treatment', 'Screening', 'Screen Failure', 'On Study', 'Completed', 'Discontinued', 'Enrolled', 'In-Active', 'Randomized', 'Screen Failure Rollback Requested']
